@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Logger.h"
+#include "Core/Logger.h"
 
 namespace fcv {
 

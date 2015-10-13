@@ -12,14 +12,14 @@
 #include "sstream"
 #include <typeinfo>
 
-#include "Logger.h"
-#include "Image.h"
+#include "Core/Logger.h"
+#include "Image/Image.h"
 namespace fcv {
 
 class ImageFileManager {
 public:
 	static Image loadImage(std::string fileName);
-	static bool saveImage(Image& image, std::string fileName);
+	static bool saveImage(Image* image, std::string fileName);
 };
 
 } /* namespace fcv */

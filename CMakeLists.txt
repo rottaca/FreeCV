@@ -8,16 +8,27 @@ SET(SOURCE_FILES
     src/Matrix.cpp
     src/Image.cpp
     src/ImageFileManager.cpp
+    src/Filter.cpp
+    src/Rectangle.cpp
+    src/Histogram.cpp
 )
 
 SET(HEADER_FILES
-    include/Logger.h
-    include/Macros.h
-    include/Vector.h
-    include/Matrix.h
-    include/Image.h
-    include/ImageFileManager.h
+    include/FreeCV.h
+    
+    include/Core/Logger.h
+    include/Core/Macros.h
+    include/Core/Matrix.h
+    include/Core/Vector.h
+    
+    include/Geometry/Rectangle.h
+    
+    include/Image/Image.h
+    include/Image/ImageFileManager.h
+    include/Image/Histogram.h
+    include/Image/Filter.h
 )
+
 
 ADD_LIBRARY(FreeCV SHARED ${SOURCE_FILES} ${HEADER_FILES} )
 
@@ -27,7 +38,7 @@ SET(TARGET FreeCV PROPERTY CMAKE_C_FLAGS_DEBUG "-DDEBUG")
 
 
 SET(TEST_SOURCE_FILES
-    src/testMain.cpp
+    testMain.cpp
 )
 
 ADD_EXECUTABLE(FreeCVTest ${TEST_SOURCE_FILES})

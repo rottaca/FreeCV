@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Vector.h"
+#include "Core/Vector.h"
 
 namespace fcv {
 

@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Image.h"
+#include "Image/Image.h"
 
 namespace fcv {
 
@@ -14,8 +14,7 @@ Image::Image() {
 	m_height = 0;
 	m_data = NULL;
 	m_ownMem = false;
-	m_format = GRAYSCALE_8;
-	m_bitsPerPixel = 8;
+	m_format = PF_GRAYSCALE_8;
 }
 Image::Image(const Image& img)
 {
@@ -51,22 +50,22 @@ void Image::init(int width, int height, PixelFormat f, unsigned char* data, bool
 		else {
 			size_t buffSize = 0;
 			switch (f) {
-			case GRAYSCALE_8:
+			case PF_GRAYSCALE_8:
 				buffSize = width * height;
-				m_bitsPerPixel = 8;
+				m_channels = 1;
 				break;
-			case RGB_888:
+			case PF_RGB_888:
 				buffSize = width * height * 3;
-				m_bitsPerPixel = 24;
+				m_channels = 3;
 				break;
-			case FLOAT_32:
+			case PF_FLOAT_32:
 				buffSize = width * height * sizeof(float);
-				m_bitsPerPixel = 8 * sizeof(float);
+				m_channels = sizeof(float);
 				break;
 			default:
 				m_data = NULL;
 				buffSize = 0;
-				m_bitsPerPixel = 0;
+				m_channels = 0;
 				return;
 			}
 			m_data = new unsigned char[buffSize];
@@ -76,20 +75,20 @@ void Image::init(int width, int height, PixelFormat f, unsigned char* data, bool
 		m_ownMem = true;
 		size_t buffSize = 0;
 		switch (f) {
-		case GRAYSCALE_8:
+		case PF_GRAYSCALE_8:
 			buffSize = width * height;
-			m_bitsPerPixel = 8;
+			m_channels = 1;
 			break;
-		case RGB_888:
+		case PF_RGB_888:
 			buffSize = width * height * 3;
-			m_bitsPerPixel = 24;
+			m_channels = 3;
 			break;
-		case FLOAT_32:
+		case PF_FLOAT_32:
 			buffSize = width * height * sizeof(float);
-			m_bitsPerPixel = 8 * sizeof(float);
+			m_channels = sizeof(float);
 			break;
 		default:
-			m_bitsPerPixel = 0;
+			m_channels = 0;
 			m_data = NULL;
 			return;
 		}

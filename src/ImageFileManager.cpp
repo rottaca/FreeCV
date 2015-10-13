@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "ImageFileManager.h"
+#include "Image/ImageFileManager.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -31,7 +31,7 @@ Image ImageFileManager::loadImage(std::string fileName) {
 		file >> width;
 		file >> height;
 		file >> tmp;
-		Image img(width,height,Image::GRAYSCALE_8);
+		Image img(width,height,Image::PF_GRAYSCALE_8);
 		unsigned char* data = img.getPtr<unsigned char>();
 		int tmp;
 		for(int i = 0; i < width*height;i++){
@@ -46,7 +46,7 @@ Image ImageFileManager::loadImage(std::string fileName) {
 		file >> width;
 		file >> height;
 		file >> tmp;
-		Image img(width,height,Image::RGB_888);
+		Image img(width,height,Image::PF_RGB_888);
 		unsigned char* data = img.getPtr<unsigned char>();
 		int tmp;
 		for(int i = 0; i < width*height*3;i++){
@@ -59,15 +59,15 @@ Image ImageFileManager::loadImage(std::string fileName) {
 		return invalidImg;
 	}
 }
-bool ImageFileManager::saveImage(Image& image, std::string fileName) {
+bool ImageFileManager::saveImage(Image* image, std::string fileName) {
 
-	switch (image.getFormat()) {
-	case Image::RGB_888:{
+	switch (image->getFormat()) {
+	case Image::PF_RGB_888:{
 		FILE *fp = fopen(fileName.c_str(), "w"); /* b - binary mode */
-		fprintf(fp, "P3\n%d %d\n255\n", image.getWidth(), image.getHeight());
-		unsigned char* ptr = image.getPtr<unsigned char>();
-		for (int j = 0; j < image.getHeight(); ++j) {
-			for (int i = 0; i < image.getWidth(); ++i) {
+		fprintf(fp, "P3\n%d %d\n255\n", image->getWidth(), image->getHeight());
+		unsigned char* ptr = image->getPtr<unsigned char>();
+		for (int j = 0; j < image->getHeight(); ++j) {
+			for (int i = 0; i < image->getWidth(); ++i) {
 
 				fprintf(fp, "%d %d %d ", *ptr++, *ptr++, *ptr++);
 			}
@@ -76,14 +76,39 @@ bool ImageFileManager::saveImage(Image& image, std::string fileName) {
 		fclose(fp);
 		break;
 	}
-	case Image::GRAYSCALE_8:{
+	case Image::PF_GRAYSCALE_8:{
 		FILE *fp = fopen(fileName.c_str(), "w"); /* b - binary mode */
-		fprintf(fp, "P2\n%d %d\n255\n", image.getWidth(), image.getHeight());
-		unsigned char* ptr = image.getPtr<unsigned char>();
-		for (int j = 0; j < image.getHeight(); ++j) {
-			for (int i = 0; i < image.getWidth(); ++i) {
+		fprintf(fp, "P2\n%d %d\n255\n", image->getWidth(), image->getHeight());
+		unsigned char* ptr = image->getPtr<unsigned char>();
+		for (int j = 0; j < image->getHeight(); ++j) {
+			for (int i = 0; i < image->getWidth(); ++i) {
 
 				fprintf(fp, "%d ", *ptr++);
+			}
+			fprintf(fp, "\n");
+		}
+		fclose(fp);
+		break;
+	}
+	case Image::PF_FLOAT_32:{
+		FILE *fp = fopen(fileName.c_str(), "w"); /* b - binary mode */
+		fprintf(fp, "P2\n%d %d\n255\n", image->getWidth(), image->getHeight());
+		float* ptr = image->getPtr<float>();
+		float max = *ptr;
+		float min = *ptr;
+		for(int i = 0; i < image->getHeight()*image->getWidth();i++){
+			float v = *ptr++;
+			if(v < min)
+				min = v;
+			else if(v > max)
+				max = v;
+		}
+
+		ptr = image->getPtr<float>();
+		for (int j = 0; j < image->getHeight(); ++j) {
+			for (int i = 0; i < image->getWidth(); ++i) {
+
+				fprintf(fp, "%d ", (int)((*ptr++ - min)/(max-min)*255));
 			}
 			fprintf(fp, "\n");
 		}

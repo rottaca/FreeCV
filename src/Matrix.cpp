@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Matrix.h"
+#include "Core/Matrix.h"
 
 namespace fcv {
 
