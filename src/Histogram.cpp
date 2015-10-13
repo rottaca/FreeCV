@@ -18,26 +18,26 @@ bool equalizeHistogram(Image* inputImage, Image* outputImage, Rectangle roi)
 {
 	assert(inputImage->getFormat() == Image::PF_GRAYSCALE_8);
 
-	Vector<int> hist = calcHist(inputImage);
+	Vector<int> hist = calcHist(inputImage, roi);
 
     // Caluculate the size of image
     int size = inputImage->getWidth() * inputImage->getHeight();
     float alpha = 255.0/size;
 
-    // Calculate the probability of each intensity
-    Vector<float> PrRk(256);
-    for(int i = 0; i < 256; i++)
-    {
-        PrRk[i] = (float)hist[i] / size;
-	}
-
 	// Generate cumulative frequency histogram
     Vector<int> cumhistogram = calcHistCum(hist);
-    unsigned char* outPtr = outputImage->getPtr<unsigned char>();
-    unsigned char* inPtr = inputImage->getPtr<unsigned char>();
-    for(int i = 0; i < size; i++){
-    	*outPtr++ = cumhistogram[*inPtr++] * alpha;
-    }
+    unsigned char* outPtr = outputImage->getPtr<unsigned char>(roi.getTop(),roi.getLeft());
+    unsigned char* inPtr = inputImage->getPtr<unsigned char>(roi.getTop(),roi.getLeft());
+
+    // Remap image
+	int offset = inputImage->getWidth() - roi.getRight() + roi.getLeft();
+	for (int y = roi.getTop(); y < roi.getBottom(); y++) {
+		for (int x = roi.getLeft(); x < roi.getRight(); x++) {
+			*outPtr++ = cumhistogram[*inPtr++] * alpha;
+		}
+		outPtr += offset;
+		inPtr += offset;
+	}
 
 	return true;
 }
@@ -64,13 +64,13 @@ Vector<int> calcHist(Image* inputImage, Rectangle roi)
 
 	Vector<int> hist(256);
 	int offset = inputImage->getWidth() - roi.getRight() + roi.getLeft();
-	unsigned char* ptr = inputImage->getPtr<unsigned char>()
-			+ (int) roi.getLeft();
+	unsigned char* ptr = inputImage->getPtr<unsigned char>(roi.getTop(),roi.getLeft());
 
 	for (int y = roi.getTop(); y < roi.getBottom(); y++) {
 		for (int x = roi.getLeft(); x < roi.getRight(); x++) {
 			hist[*ptr++]++;
 		}
+		ptr += offset;
 	}
 	return hist;
 }

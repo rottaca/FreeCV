@@ -54,22 +54,24 @@ int main(int argc, char **argv) {
 //	kernel.at(2,2) = 1;
 
 	fcv::Image img4(img3,true);
-//	fcv::applyKernel(&img3,&img4,kernel,16);
+	fcv::applyKernel(&img3,&img4,kernel,16);
 //	fcv::applyKernel(&img4,&img4,kernel,16);
 //	fcv::applyKernel(&img4,&img4,kernel,16);
-	fcv::filterMedian(&img3,&img4,3);
+//	fcv::filterMedian(&img3,&img4,3);
 	fcv::ImageFileManager::saveImage(&img4,"median.pgm");
 //	fcv::filterGauss(&img3,&img4,5);
 //	fcv::ImageFileManager::saveImage(&img4,"gaus.pgm");
 
 
-	fcv::Vector<int> hist = fcv::calcHist(&img3);
+	fcv::Vector<int> hist = fcv::calcHist(&img3, fcv::Rectangle(200,200,200,200));
 	fcv::Image histImg = fcv::convertHistToImage(&hist);
 	fcv::ImageFileManager::saveImage(&histImg,"hist.pgm");
 	fcv::Vector<int> histCum = fcv::calcHistCum(hist);
 	fcv::Image histImgCum = fcv::convertHistToImage(&histCum);
 	fcv::ImageFileManager::saveImage(&histImgCum,"histCum.pgm");
 
+	//fcv::filterMedian(&img3,&img3,3);
+	fcv::applyKernel(&img3,&img3,kernel,16);
 	fcv::equalizeHistogram(&img3,&img3);
 	fcv::ImageFileManager::saveImage(&img3,"equalized.pgm");
 
