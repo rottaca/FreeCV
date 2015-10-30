@@ -29,8 +29,9 @@ inline T clip(const T& n, const T& lower, const T& upper) {
 }
 
 bool filterMedian(Image* inputImage, Image* outputImage, int kernelSize);
+bool filterGauss(Image* inputImage, Image* outputImage, int kernelSize);
 
-bool applyKernel(Image* inputImage, Image* outputImage, Matrix<int>& kernel, int weightSum);
+bool applyKernel(Image* inputImage, Image* outputImage, Matrixi& kernel, int weightSum);
 } /* namespace fcv */
 
 #endif /* FILTER_H_ */

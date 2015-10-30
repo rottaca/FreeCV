@@ -10,18 +10,18 @@
 
 #include "Image/Image.h"
 #include "Core/Vector.h"
-#include "Geometry/Rectangle.h"
+#include "Core/Rectangle.h"
 namespace fcv {
 
-Vector<int> calcHist(Image* inputImage);
-Vector<int> calcHist(Image* inputImage, Rectangle roi);
+Vectori calcHist(Image* inputImage);
+Vectori calcHist(Image* inputImage, Rectangle roi);
 
-Vector<int> calcHistCum(Vector<int> hist);
+Vectori calcHistCum(Vectori hist);
 
 bool equalizeHistogram(Image* inputImage, Image* outputImage);
 bool equalizeHistogram(Image* inputImage, Image* outputImage, Rectangle roi);
 
-Image convertHistToImage(Vector<int>* hist, int height = 100);
+Image convertHistToImage(Vectori* hist, int height = 100);
 
 } /* namespace fcv */
 

@@ -18,14 +18,14 @@ bool equalizeHistogram(Image* inputImage, Image* outputImage, Rectangle roi)
 {
 	assert(inputImage->getFormat() == Image::PF_GRAYSCALE_8);
 
-	Vector<int> hist = calcHist(inputImage, roi);
+	Vectori hist = calcHist(inputImage, roi);
 
     // Caluculate the size of image
     int size = inputImage->getWidth() * inputImage->getHeight();
     float alpha = 255.0/size;
 
 	// Generate cumulative frequency histogram
-    Vector<int> cumhistogram = calcHistCum(hist);
+    Vectori cumhistogram = calcHistCum(hist);
     unsigned char* outPtr = outputImage->getPtr<unsigned char>(roi.getTop(),roi.getLeft());
     unsigned char* inPtr = inputImage->getPtr<unsigned char>(roi.getTop(),roi.getLeft());
 
@@ -41,9 +41,9 @@ bool equalizeHistogram(Image* inputImage, Image* outputImage, Rectangle roi)
 
 	return true;
 }
-Vector<int> calcHistCum(Vector<int> hist)
+Vectori calcHistCum(Vectori hist)
 {
-	Vector<int> histcum(hist.getSize());
+	Vectori histcum(hist.getSize());
 	histcum[0] = hist[0];
 
 	for (int i = 1; i < hist.getSize(); i++) {
@@ -51,18 +51,18 @@ Vector<int> calcHistCum(Vector<int> hist)
 	}
 	return histcum;
 }
-Vector<int> calcHist(Image* inputImage)
+Vectori calcHist(Image* inputImage)
 {
 	return calcHist(inputImage,Rectangle(0,0,inputImage->getWidth(),inputImage->getHeight()));
 }
-Vector<int> calcHist(Image* inputImage, Rectangle roi)
+Vectori calcHist(Image* inputImage, Rectangle roi)
 {
 	assert(inputImage->getFormat() == Image::PF_GRAYSCALE_8);
 	assert(roi.getTop() >= 0 && roi.getLeft() >= 0
 					&& roi.getRight() <= inputImage->getWidth()
 					&& roi.getBottom() <= inputImage->getHeight());
 
-	Vector<int> hist(256);
+	Vectori hist(256);
 	int offset = inputImage->getWidth() - roi.getRight() + roi.getLeft();
 	unsigned char* ptr = inputImage->getPtr<unsigned char>(roi.getTop(),roi.getLeft());
 
@@ -75,7 +75,7 @@ Vector<int> calcHist(Image* inputImage, Rectangle roi)
 	return hist;
 }
 
-Image convertHistToImage(Vector<int>* hist, int height){
+Image convertHistToImage(Vectori* hist, int height){
 	int width = 256;
 	int dataheight = hist->getMax();
 

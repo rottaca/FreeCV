@@ -104,14 +104,15 @@ public:
 		return s.str();
 	}
 
+	void init(int width, int height, PixelFormat f, unsigned char* data = NULL,
+			bool copyData = false);
+
 private:
 	int m_width, m_height, m_channels;
 	bool m_ownMem;
 	unsigned char* m_data;
 	PixelFormat m_format;
 
-	void init(int width, int height, PixelFormat f, unsigned char* data = NULL,
-			bool copyData = false);
 	void releaseData();
 };
 

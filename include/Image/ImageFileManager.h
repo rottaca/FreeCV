@@ -18,8 +18,10 @@ namespace fcv {
 
 class ImageFileManager {
 public:
-	static Image loadImage(std::string fileName);
-	static bool saveImage(Image* image, std::string fileName);
+	typedef enum {UNKNOWN, PGM_ASCII, PGM_BINARY, PPM_ASCII, PPM_BINARY} ImageFileType;
+
+	static Image loadImage(std::string fileName, ImageFileType type = UNKNOWN);
+	static bool saveImage(Image* image, std::string fileName, ImageFileType type = UNKNOWN);
 };
 
 } /* namespace fcv */

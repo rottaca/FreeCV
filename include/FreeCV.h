@@ -12,12 +12,13 @@
 #include "Core/Macros.h"
 #include "Core/Matrix.h"
 #include "Core/Vector.h"
-
-#include "Geometry/Rectangle.h"
+#include "Core/Rectangle.h"
 
 #include "Image/Filter.h"
 #include "Image/Histogram.h"
 #include "Image/Image.h"
 #include "Image/ImageFileManager.h"
+#include "Image/Transform.h"
 
+#include "Stereo/SGM.h"
 #endif /* FREECV_H_ */

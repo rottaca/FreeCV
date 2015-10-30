@@ -5,12 +5,11 @@
  *      Author: andreas
  */
 
-#include "Geometry/Rectangle.h"
+#include "Core/Rectangle.h"
 
 namespace fcv {
 
 Rectangle::Rectangle(float x, float y, float width, float height){
-	leftTop = Vector<float>(2);
 	this->leftTop[0] = x;
 	this->leftTop[1] = y;
 	this->width = width;

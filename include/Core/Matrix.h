@@ -15,17 +15,20 @@
 
 #include "Core/Logger.h"
 #include "Core/Vector.h"
+#include "Core/Macros.h"
 
 namespace fcv {
 
-template<typename T>
+
+template<typename T, size_t COMPILE_ROWS, size_t COMPILE_COLS >
 class Matrix {
+
 public:
 	Matrix(size_t rows, size_t cols, T* data = NULL) {
 		m = NULL;
 		init(rows, cols, data);
 	}
-	Matrix(const Matrix<T>& m2) {
+	Matrix(const Matrix<T, COMPILE_ROWS, COMPILE_COLS>& m2) {
 		m = NULL;
 		init(m2.getRows(), m2.getCols(), m2.getPtr());
 	}
@@ -37,6 +40,12 @@ public:
 	void init(size_t rows, size_t cols, void* data = NULL) {
 		if (m != NULL)
 			delete[] m;
+
+		if(COMPILE_ROWS != FCV_DYNAMIC_SIZE)
+			rows = COMPILE_ROWS;
+		if(COMPILE_COLS != FCV_DYNAMIC_SIZE)
+			cols = COMPILE_COLS;
+
 		this->cols = cols;
 		this->rows = rows;
 		m = new T[rows * cols];
@@ -45,7 +54,6 @@ public:
 			memcpy(m, data, cols * rows * sizeof(T));
 		else
 			memset(m, 0, cols * rows * sizeof(T));
-
 	}
 
 	inline T* getPtr() const {
@@ -105,14 +113,14 @@ public:
 	////////////////////////////////////////
 	// Operator overloading
 	////////////////////////////////////////
-	Matrix<T> operator=(const Matrix<T>& m2) {
+	Matrix<T,COMPILE_ROWS, COMPILE_COLS> operator=(const Matrix<T, COMPILE_ROWS, COMPILE_COLS>& m2) {
 		init(m2.getRows(), m2.getCols(), m2.getPtr());
 		return *this;
 	}
 
-	Vector<T> operator*(Vector<T> v2) {
+	Vector<T,COMPILE_ROWS> operator*(Vector<T, COMPILE_COLS> v2) {
 		assert(v2.getSize() == cols);
-		Vector<T> nv(rows);
+		Vector<T,COMPILE_ROWS> nv(rows);
 
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
@@ -135,6 +143,22 @@ private:
 	// Contains Matrix Data
 	T* m;
 };
+
+typedef Matrix<unsigned char,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixb;
+typedef Matrix<float,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixf;
+typedef Matrix<int,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixi;
+
+typedef Matrix<unsigned char,2,2> Matrix2x2b;
+typedef Matrix<float,2,2> Matrix2x2f;
+typedef Matrix<int,2,2> Matrix2x2i;
+
+typedef Matrix<unsigned char,3,3> Matrix3x3b;
+typedef Matrix<float,3,3> Matrix3x3f;
+typedef Matrix<int,3,3> Matrix3x3i;
+
+typedef Matrix<unsigned char,4,4> Matrix4x4b;
+typedef Matrix<float,4,4> Matrix4x4f;
+typedef Matrix<int,4,4> Matrix4x4i;
 
 } /* namespace fcv */
 

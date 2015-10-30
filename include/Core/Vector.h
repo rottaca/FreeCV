@@ -14,9 +14,11 @@
 #include "assert.h"
 
 #include "Core/Logger.h"
+#include "Core/Macros.h"
+
 namespace fcv {
 
-template<typename T>
+template<typename T, size_t COMPILE_SIZE>
 class Vector {
 public:
 	Vector(size_t elemCnt){
@@ -26,8 +28,9 @@ public:
 	Vector(){
 		v = NULL;
 		cnt = 0;
+		init(0);
 	}
-	Vector(const Vector<T>& v2){
+	Vector(const Vector<T, COMPILE_SIZE>& v2){
 		v = NULL;
 		init(v2.getSize(),v2.v);
 	}
@@ -36,9 +39,18 @@ public:
 			delete[] v;
 	}
 	void init(size_t elemCnt, void* data = NULL){
-		cnt = elemCnt;
 		if(v != NULL)
 			delete[] v;
+
+		v = NULL;
+
+		if(COMPILE_SIZE != FCV_DYNAMIC_SIZE)
+			elemCnt = COMPILE_SIZE;
+
+		if(elemCnt <= 0)
+			return;
+
+		cnt = elemCnt;
 		v = new T[cnt];
 		if(data != NULL)
 		{
@@ -114,23 +126,23 @@ public:
     	return v[i];
     }
 
-    Vector<T> operator=(const Vector<T>& v2){
+    Vector<T,COMPILE_SIZE> operator=(const Vector<T,COMPILE_SIZE>& v2){
     	init(v2.getSize(),v2.v);
     	return *this;
     }
 
-    Vector<T> operator+(Vector<T>& v2)
+    Vector<T,COMPILE_SIZE> operator+(Vector<T,COMPILE_SIZE>& v2)
     {
     	assert(v2.getSize() == cnt);
-    	Vector<T> nv(*this);
+    	Vector<T,COMPILE_SIZE> nv(*this);
     	for(int i = 0; i < cnt;i++)
     		nv[i] += v2[i];
     	return nv;
     }
 
-    Vector<T> operator*(T s)
+    Vector<T,COMPILE_SIZE> operator*(T s)
     {
-    	Vector<T> nv(*this);
+    	Vector<T,COMPILE_SIZE> nv(*this);
     	for(int i = 0; i < cnt;i++){
     		nv[i] *= s;
     	}
@@ -154,6 +166,22 @@ private:
 
 };
 
+
+typedef Vector<unsigned char,FCV_DYNAMIC_SIZE> Vectorb;
+typedef Vector<float,FCV_DYNAMIC_SIZE> Vectorf;
+typedef Vector<int,FCV_DYNAMIC_SIZE> Vectori;
+
+typedef Vector<unsigned char,2> Vector2b;
+typedef Vector<float,2> Vector2f;
+typedef Vector<int,2> Vector2i;
+
+typedef Vector<unsigned char,3> Vector3b;
+typedef Vector<float,3> Vector3f;
+typedef Vector<int,3> Vector3i;
+
+typedef Vector<unsigned char,4> Vector4b;
+typedef Vector<float,4> Vector4f;
+typedef Vector<int,4> Vector4i;
 
 } /* namespace fcv */
 

@@ -10,6 +10,70 @@
 
 namespace fcv {
 
+bool filterGauss(Image* inputImage, Image* outputImage, int kernelSize) {
+
+	Matrixi kernel(kernelSize,kernelSize);
+	int weightSum;
+
+	switch (kernelSize) {
+	case 3:
+		kernel.at(0,0) = 1;
+		kernel.at(0,1) = 2;
+		kernel.at(0,2) = 1;
+
+		kernel.at(1,0) = 2;
+		kernel.at(1,1) = 4;
+		kernel.at(1,2) = 2;
+
+		kernel.at(2,0) = 1;
+		kernel.at(2,1) = 2;
+		kernel.at(2,2) = 1;
+
+		weightSum = 16;
+		break;
+	case 5:
+		kernel.at(0,0) = 1;
+		kernel.at(0,1) = 4;
+		kernel.at(0,2) = 6;
+		kernel.at(0,3) = 4;
+		kernel.at(0,4) = 1;
+
+		kernel.at(1,0) = 4;
+		kernel.at(1,1) = 16;
+		kernel.at(1,2) = 24;
+		kernel.at(1,3) = 16;
+		kernel.at(1,4) = 4;
+
+		kernel.at(2,0) = 6;
+		kernel.at(2,1) = 24;
+		kernel.at(2,2) = 36;
+		kernel.at(2,3) = 24;
+		kernel.at(2,4) = 6;
+
+		kernel.at(3,0) = 4;
+		kernel.at(3,1) = 16;
+		kernel.at(3,2) = 24;
+		kernel.at(3,3) = 16;
+		kernel.at(3,4) = 4;
+
+		kernel.at(4,0) = 1;
+		kernel.at(4,1) = 4;
+		kernel.at(4,2) = 6;
+		kernel.at(4,3) = 4;
+		kernel.at(4,4) = 1;
+
+		weightSum = 256;
+
+		break;
+	default:
+		// TODO Generisch!
+		return false;
+		break;
+	}
+	applyKernel(inputImage,outputImage,kernel,weightSum);
+
+	return true;
+}
 bool filterMedian(Image* inputImage, Image* outputImage, int kernelSize) {
 	assert(kernelSize % 2 == 1);
 	assert(inputImage->getFormat() == outputImage->getFormat());
@@ -72,7 +136,7 @@ bool filterMedian(Image* inputImage, Image* outputImage, int kernelSize) {
 	return true;
 }
 
-bool applyKernel(Image* inputImage, Image* outputImage, Matrix<int>& kernel,
+bool applyKernel(Image* inputImage, Image* outputImage, Matrixi& kernel,
 		int weightSum) {
 	assert(kernel.getCols() == kernel.getRows());
 	assert(kernel.getCols() % 2 == 1);
@@ -120,7 +184,6 @@ bool applyKernel(Image* inputImage, Image* outputImage, Matrix<int>& kernel,
 		return false;
 	}
 	return true;
-
 }
 
 } /* namespace fcv */

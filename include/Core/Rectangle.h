@@ -26,7 +26,7 @@ public:
 	float getHeight(){return height;}
 
 private:
-	Vector<float> leftTop;
+	Vector2f leftTop;
 	float width, height;
 };
 
