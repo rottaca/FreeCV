@@ -20,7 +20,8 @@ SGM::SGM() {
 	// Define all evaluation paths
 	m_paths.push_back(Path(1,0));
 	m_paths.push_back(Path(-1,0));
-//	m_paths.push_back(Path(0,1));
+	m_paths.push_back(Path(0,1));
+	m_paths.push_back(Path(0,-1));
 
 	updatePenalties(10,100);
 }
@@ -148,7 +149,38 @@ void SGM::aggregateCost(){
 				costPtr += addOneRow;
 			}
 		}
+		// from right to left
+		else if(path.y < 0)
+		{
+			// Accumulate costs
+			// Go from right to left on each line
+			aggrcostPtrDir = m_aggregatedCostsDir + idxBottomRight - addOneColumn;
+			costPtr = m_CostData + idxBottomRight - addOneColumn;
 
+			for(int y = m_height-2; y >= 0 ; y--){
+				for (int x = m_width - 1; x >= 0; x--) {
+					evaluatePath(aggrcostPtrDir+addOneColumn, costPtr, aggrcostPtrDir);
+					aggrcostPtrDir-=addOneRow;
+					costPtr-=addOneRow;
+				}
+			}
+		}
+		// From left to right
+		else if (path.y > 0) {
+
+			// Accumulate costs
+			// Go from right to left on each line
+			aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + addOneColumn;
+			costPtr = m_CostData + idxTopLeft + addOneColumn;
+
+			for(int y = m_height-2; y >= 0 ; y--){
+				for (int x = m_width - 1; x >= 0; x--) {
+					evaluatePath(aggrcostPtrDir-addOneColumn, costPtr, aggrcostPtrDir);
+					aggrcostPtrDir+=addOneRow;
+					costPtr+=addOneRow;
+				}
+			}
+		}
 
 		aggrcostPtr = m_aggregatedCosts;
 		aggrcostPtrDir = m_aggregatedCostsDir;
@@ -197,11 +229,10 @@ void SGM::initAggregateCostDir(Path p)
 			aggrcostPtrDir += addOneColumn;
 		}
 	}
-	if (p.y < 0) {
+	else if (p.y < 0) {
 		// Point to the last row
-		costPtr = m_CostData + (m_height - 1) * m_width * m_maxDisp;
-		aggrcostPtrDir = m_aggregatedCostsDir
-				+ (m_height - 1) * m_width * m_maxDisp;
+		costPtr = m_CostData + idxBottomLeft;
+		aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft;
 		// Copy Data
 		memcpy(aggrcostPtrDir, costPtr,
 				sizeof(unsigned int) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
