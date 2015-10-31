@@ -10,6 +10,7 @@
 #include "stdlib.h"
 #include <limits>
 #include <algorithm>
+#include <iostream>
 
 namespace fcv {
 
@@ -22,6 +23,10 @@ SGM::SGM() {
 	m_paths.push_back(Path(-1,0));
 	m_paths.push_back(Path(0,1));
 	m_paths.push_back(Path(0,-1));
+	m_paths.push_back(Path(1,1));
+	m_paths.push_back(Path(-1,-1));
+	m_paths.push_back(Path(1,-1));
+	m_paths.push_back(Path(-1,1));
 
 	updatePenalties(10,100);
 }
@@ -36,6 +41,10 @@ void SGM::deinit(){
 	{
 		delete[] m_CostData;
 		m_CostData = NULL;
+		delete[] m_aggregatedCostsDir;
+		m_aggregatedCostsDir = NULL;
+		delete[] m_disparityMap;
+		m_disparityMap = NULL;
 		delete[] m_aggregatedCosts;
 		m_aggregatedCosts = NULL;
 		m_isInitialized = false;
@@ -99,69 +108,107 @@ void SGM::aggregateCost(){
 	idxBottomLeft = (m_height-1)*m_width*m_maxDisp,
 	idxBottomRight = ((m_height-1)*m_width + m_width-1)*m_maxDisp,
 	addOneRow = m_maxDisp,
-	addOneColumn = m_width*m_maxDisp;
+	addOneColumn = m_width*m_maxDisp,
+	offs;
 
 	// Reset memory of aggreated costs
 	memset(m_aggregatedCosts,0,m_height*m_width*m_maxDisp*sizeof(unsigned int));
 
-	int xCurr,yCurr, steps;
+	int xCurr,yCurr;
 	// Create an aggregated costs buffer for each path
 	for(int p = 0; p < m_paths.size();p++){
 		Path path = m_paths.at(p);
 
-
 		// Check which side of the image is the start and init the whole image border on that side
 		initAggregateCostDir(path);
+		// Offset to next pixel
+		offs = path.y*addOneColumn + path.x*addOneRow;
 
 		// from right to left
 		if(path.x < 0)
 		{
 			// Accumulate costs
 			// Go from right to left on each line
-			aggrcostPtrDir = m_aggregatedCostsDir + idxBottomRight - addOneRow;
-			costPtr = m_CostData  + idxBottomRight - addOneRow;
 
-			for(int y = m_height-1; y >= 0 ; y--){
-				for (int x = m_width - 2; x >= 0; x--) {
-					evaluatePath(aggrcostPtrDir+addOneRow, costPtr, aggrcostPtrDir);
-					aggrcostPtrDir-=addOneRow;
-					costPtr-=addOneRow;
+			for(int y = 0; y  < m_height; y++){
+				// Point to last row
+				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight + y*addOneColumn;
+				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
+				costPtr = m_CostData  + idxTopRight + y*addOneColumn;
+
+
+//				std::cout << "loop: " << y << std::endl;
+				// Pointer still in image?
+				xCurr = m_width-1;
+				yCurr = y;
+				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
+
+
+//					std::cout << "x: "<< x << std::endl;
+					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
+
+					aggrcostPtrDirPrev = aggrcostPtrDir;
+					aggrcostPtrDir+=offs;
+					costPtr+=offs;
+					xCurr += path.x;
+					yCurr += path.y;
 				}
-				aggrcostPtrDir-=addOneRow;
-				costPtr-=addOneRow;
 			}
 		}
 		// From left to right
 		else if (path.x > 0) {
 			// Accumulate costs
 			// Go from right to left on each line
-			aggrcostPtrDir = m_aggregatedCostsDir + addOneRow;
-			costPtr = m_CostData + addOneRow;
+			for(int y = 0; y  < m_height ; y++){
+				// Point to last row
+				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + y*addOneColumn;
+				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
+				costPtr = m_CostData  + idxTopLeft + y*addOneColumn;
 
-			for (int y = 0; y < m_height; y++) {
-				for (int x = 1; x < m_width; x++) {
-					evaluatePath(aggrcostPtrDir - addOneRow, costPtr,
-							aggrcostPtrDir);
-					aggrcostPtrDir += addOneRow;
-					costPtr += addOneRow;
+				if(aggrcostPtrDirPrev < m_aggregatedCostsDir)
+					continue;
+
+				// Pointer still in image?
+				xCurr = 0;
+				yCurr = y;
+				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
+
+
+//					std::cout << "x: "<< x << std::endl;
+					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
+
+					aggrcostPtrDirPrev = aggrcostPtrDir;
+					aggrcostPtrDir+=offs;
+					costPtr+=offs;
+					xCurr += path.x;
+					yCurr += path.y;
 				}
-				aggrcostPtrDir += addOneRow;
-				costPtr += addOneRow;
 			}
 		}
 		// from right to left
-		else if(path.y < 0)
+		if(path.y < 0)
 		{
 			// Accumulate costs
 			// Go from right to left on each line
-			aggrcostPtrDir = m_aggregatedCostsDir + idxBottomRight - addOneColumn;
-			costPtr = m_CostData + idxBottomRight - addOneColumn;
+			for(int x = 0; x  < m_width ; x++){
+				// Point to last row
+				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft + x*addOneRow;
+				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
+				costPtr = m_CostData + idxBottomLeft  + x*addOneRow;
 
-			for(int y = m_height-2; y >= 0 ; y--){
-				for (int x = m_width - 1; x >= 0; x--) {
-					evaluatePath(aggrcostPtrDir+addOneColumn, costPtr, aggrcostPtrDir);
-					aggrcostPtrDir-=addOneRow;
-					costPtr-=addOneRow;
+				// Pointer still in image?
+				xCurr = x;
+				yCurr = m_height-1;
+				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
+
+					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
+
+					aggrcostPtrDirPrev = aggrcostPtrDir;
+					aggrcostPtrDir+=offs;
+					costPtr+=offs;
+					xCurr += path.x;
+					yCurr += path.y;
+
 				}
 			}
 		}
@@ -170,14 +217,29 @@ void SGM::aggregateCost(){
 
 			// Accumulate costs
 			// Go from right to left on each line
-			aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + addOneColumn;
-			costPtr = m_CostData + idxTopLeft + addOneColumn;
+			for(int x = 0; x  < m_width ; x++){
+				// Point to last row
+				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneRow + addOneColumn;
+				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
+				costPtr = m_CostData + x*addOneRow + addOneColumn;
 
-			for(int y = m_height-2; y >= 0 ; y--){
-				for (int x = m_width - 1; x >= 0; x--) {
-					evaluatePath(aggrcostPtrDir-addOneColumn, costPtr, aggrcostPtrDir);
-					aggrcostPtrDir+=addOneRow;
-					costPtr+=addOneRow;
+				if (aggrcostPtrDirPrev < m_aggregatedCostsDir)
+					continue;
+
+				// Pointer still in image?
+				xCurr = x;
+				yCurr = 1;
+				while(xCurr >= 0 && yCurr >= 0 &&
+						xCurr < m_width && yCurr < m_height){
+
+
+					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
+
+					aggrcostPtrDirPrev = aggrcostPtrDir;
+					aggrcostPtrDir+=offs;
+					costPtr+=offs;
+					xCurr += path.x;
+					yCurr += path.y;
 				}
 			}
 		}
@@ -229,7 +291,8 @@ void SGM::initAggregateCostDir(Path p)
 			aggrcostPtrDir += addOneColumn;
 		}
 	}
-	else if (p.y < 0) {
+
+	if (p.y < 0) {
 		// Point to the last row
 		costPtr = m_CostData + idxBottomLeft;
 		aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft;
@@ -287,13 +350,10 @@ void SGM::computeDisparityMap()
 
 	for (int y = 0; y < m_height; y++) {
 		for (int x = 0; x < m_width; x++) {
-//			if (x > m_maxDisp) {
-				// Index is Disparity
-				int minIdx = std::min_element(aggCostPtr,
-						aggCostPtr + m_maxDisp) - aggCostPtr;
-				*ptr++ = minIdx;
-//			} else
-//				*ptr++ = 0;
+
+			// Index is Disparity
+			int minIdx = std::min_element(aggCostPtr, aggCostPtr + m_maxDisp)- aggCostPtr;
+			*ptr++ = minIdx;
 
 			costPtr += m_maxDisp;
 			aggCostPtr += m_maxDisp;
