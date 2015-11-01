@@ -6,6 +6,8 @@
  */
 
 #include "FreeCV.h"
+#include <iostream>
+#include <unistd.h>
 
 int main(int argc, char **argv) {
 
@@ -42,57 +44,74 @@ int main(int argc, char **argv) {
 //	fcv::imageHoughTransform(&img6,&img3);
 //	fcv::ImageFileManager::saveImage(&img3,"hough.pgm",fcv::ImageFileManager::PGM_ASCII);
 
-	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
-	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
-
-	assert(imgL.isValid());
-	assert(imgR.isValid());
-
-	fcv::SGM sgm;
-
-	std::vector<int> penalties1;
-	penalties1.push_back(25);
-//	penalties1.push_back(10);
-//	penalties1.push_back(20);
-
-	std::vector<int> penalties2;
-//	penalties2.push_back(60);
-//	penalties2.push_back(80);
-	penalties2.push_back(200);
-
-	fcv::Image imgDisp(imgL.getWidth(), imgL.getHeight(),
-			fcv::Image::PF_FLOAT_32);
-
-	for (int i1 = 0; i1 < penalties1.size(); i1++) {
-		for (int i2 = 0; i2 < penalties2.size(); i2++) {
-			sgm.updatePenalties(penalties1.at(i1),penalties2.at(i2));
-			sgm.init(imgL.getWidth(), imgL.getHeight(), 100);
-			sgm.processImagePair(&imgL, &imgR);
-
-//			fcv::Image imgCost(60, imgL.getWidth(), fcv::Image::PF_GRAYSCALE_8);
-
-//			unsigned int* costData = sgm.getCostData();
-//			unsigned char* imgData = imgCost.getPtr<unsigned char>();
+//	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
+//	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
 //
-//			for (int x = 0; x < imgL.getWidth(); x++) {
-//				for (int d = 0; d < 60; d++) {
-//					*imgData++ = *costData++;
-//				}
-//			}
-//			fcv::ImageFileManager::saveImage(&imgCost, "cost.pgm",
+//	assert(imgL.isValid());
+//	assert(imgR.isValid());
+//
+//	fcv::SGM sgm;
+//
+//	std::vector<int> penalties1;
+//	penalties1.push_back(25);
+////	penalties1.push_back(10);
+////	penalties1.push_back(20);
+//
+//	std::vector<int> penalties2;
+////	penalties2.push_back(60);
+////	penalties2.push_back(80);
+//	penalties2.push_back(200);
+//
+//	fcv::Image imgDisp(imgL.getWidth(), imgL.getHeight(),
+//			fcv::Image::PF_FLOAT_32);
+//
+//	for (int i1 = 0; i1 < penalties1.size(); i1++) {
+//		for (int i2 = 0; i2 < penalties2.size(); i2++) {
+//			sgm.updatePenalties(penalties1.at(i1),penalties2.at(i2));
+//			sgm.init(imgL.getWidth(), imgL.getHeight(), 100);
+//			clock_t time = clock();
+//			sgm.processImagePair(&imgL, &imgR);
+//			std::cout << (float)(clock()-time)*1000 / CLOCKS_PER_SEC << " ms" << std::endl;
+//
+////			fcv::Image imgCost(60, imgL.getWidth(), fcv::Image::PF_GRAYSCALE_8);
+//
+////			unsigned int* costData = sgm.getCostData();
+////			unsigned char* imgData = imgCost.getPtr<unsigned char>();
+////
+////			for (int x = 0; x < imgL.getWidth(); x++) {
+////				for (int d = 0; d < 60; d++) {
+////					*imgData++ = *costData++;
+////				}
+////			}
+////			fcv::ImageFileManager::saveImage(&imgCost, "cost.pgm",
+////					fcv::ImageFileManager::PGM_BINARY);
+//
+//			memcpy(imgDisp.getPtr<float*>(), sgm.getDisparityData(),
+//					imgL.getWidth() * imgL.getHeight() * sizeof(float));
+//
+//			std::ostringstream str;
+//			str << "disp_" << penalties1.at(i1) << "_" << penalties2.at(i2) << ".pgm";
+//
+//			fcv::ImageFileManager::saveImage(&imgDisp, str.str(),
 //					fcv::ImageFileManager::PGM_BINARY);
+//		}
+//	}
 
-			memcpy(imgDisp.getPtr<float*>(), sgm.getDisparityData(),
-					imgL.getWidth() * imgL.getHeight() * sizeof(float));
+	fcv::VideoCapture vc;
+	vc.openAndInitDev("/dev/video0");
+	vc.startCapture();
+	usleep(500000);
+	fcv::Image imgRaw, imgRGB;
+	if(vc.grabFrame(&imgRaw)){
 
-			std::ostringstream str;
-			str << "disp_" << penalties1.at(i1) << "_" << penalties2.at(i2) << ".pgm";
+		fcv::convertPxFormat(&imgRaw,&imgRGB,fcv::YUYV_TO_RGB_888);
 
-			fcv::ImageFileManager::saveImage(&imgDisp, str.str(),
-					fcv::ImageFileManager::PGM_BINARY);
-		}
+		fcv::ImageFileManager::saveImage(&imgRGB, "test.ppm",
+				fcv::ImageFileManager::PPM_BINARY);
 	}
-
-
+	else
+	{
+		std::cout << "no Data" << std::endl;
+	}
 }
 

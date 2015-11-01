@@ -13,6 +13,8 @@ SET(SOURCE_FILES
     src/Histogram.cpp
     src/Transform.cpp
     src/SGM.cpp
+    src/VideoCapture.cpp
+    src/ColorConvert.cpp
 )
 
 SET(HEADER_FILES
@@ -29,8 +31,11 @@ SET(HEADER_FILES
     include/Image/Histogram.h
     include/Image/Filter.h
     include/Image/Transform.h
+    include/Image/ColorConvert.h
     
     include/Stereo/SGM.h
+    
+    include/IO/VideoCapture.h
 )
 
 

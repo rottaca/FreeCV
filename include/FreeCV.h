@@ -19,6 +19,9 @@
 #include "Image/Image.h"
 #include "Image/ImageFileManager.h"
 #include "Image/Transform.h"
+#include "Image/ColorConvert.h"
 
 #include "Stereo/SGM.h"
+
+#include "IO/VideoCapture.h"
 #endif /* FREECV_H_ */

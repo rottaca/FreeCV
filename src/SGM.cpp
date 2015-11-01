@@ -61,15 +61,17 @@ bool SGM::init(int width, int height, int maxDisp){
 	m_width = width;
 	m_height = height;
 	m_maxDisp = maxDisp;
+	m_dataSize = m_width*m_height*m_maxDisp;
+	m_buffSize = m_dataSize*sizeof(unsigned int);
 
 	m_CostData = new unsigned int[width*height*maxDisp];
-	memset(m_CostData,0,width*height*maxDisp);
+	memset(m_CostData,0,m_dataSize);
 
 	m_aggregatedCosts = new unsigned int[width*height*maxDisp];
-	memset(m_aggregatedCosts,0,width*height*maxDisp*sizeof(unsigned int));
+	memset(m_aggregatedCosts,0,m_buffSize);
 
 	m_aggregatedCostsDir = new unsigned int[width*height*maxDisp];
-	memset(m_aggregatedCostsDir,0,width*height*maxDisp*sizeof(unsigned int));
+	memset(m_aggregatedCostsDir,0,m_buffSize);
 
 	m_disparityMap = new float[width*height];
 	memset(m_disparityMap,0,width*height*sizeof(float));
@@ -97,6 +99,15 @@ void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 			imgRightPtr++;
 		}
 	}
+//	// Scale to 11 bits
+//	unsigned int max = *max_element(m_CostData,
+//			m_CostData + m_height * m_width * m_maxDisp);
+//
+//	costPtr = m_CostData;
+//	for (int i = 0; i < m_height * m_width * m_maxDisp; i++)
+//		*costPtr++ *= (1<<11)/max;
+
+
 }
 void SGM::aggregateCost(){
 
@@ -114,7 +125,7 @@ void SGM::aggregateCost(){
 	offs;
 
 	// Reset memory of aggreated costs
-	memset(m_aggregatedCosts,0,m_height*m_width*m_maxDisp*sizeof(unsigned int));
+	memset(m_aggregatedCosts,0, m_buffSize);
 
 	int xCurr,yCurr;
 	// Create an aggregated costs buffer for each path
@@ -137,6 +148,7 @@ void SGM::aggregateCost(){
 #ifndef NDEBUG
 		cout << "Aggregate X-Dir" << endl;
 #endif
+
 			for(int y = 0; y  < m_height; y++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight + y*addOneColumn;
@@ -169,6 +181,7 @@ void SGM::aggregateCost(){
 #ifndef NDEBUG
 		cout << "Aggregate X-Dir" << endl;
 #endif
+
 			for(int y = 0; y  < m_height ; y++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + y*addOneColumn;
@@ -203,6 +216,7 @@ void SGM::aggregateCost(){
 #ifndef NDEBUG
 		cout << "Aggregate Y-Dir" << endl;
 #endif
+
 			for(int x = 0; x  < m_width ; x++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft + x*addOneRow;
@@ -233,6 +247,7 @@ void SGM::aggregateCost(){
 #ifndef NDEBUG
 		cout << "Aggregate Y-Dir" << endl;
 #endif
+
 			for(int x = 0; x  < m_width ; x++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneRow + addOneColumn;
@@ -260,10 +275,11 @@ void SGM::aggregateCost(){
 			}
 		}
 
-		aggrcostPtr = m_aggregatedCosts;
-		aggrcostPtrDir = m_aggregatedCostsDir;
-		for(int i = 0; i < m_height*m_width*m_maxDisp; i++){
-			*aggrcostPtr++ += *aggrcostPtrDir++;
+//		aggrcostPtr = m_aggregatedCosts;
+//		aggrcostPtrDir = m_aggregatedCostsDir;
+
+		for(int i = 0; i < m_dataSize; i++){
+			m_aggregatedCosts[i] += m_aggregatedCostsDir[i];
 		}
 
 	}
@@ -280,7 +296,7 @@ void SGM::initAggregateCostDir(Path p)
 	addOneRow = m_maxDisp,
 	addOneColumn = m_width*m_maxDisp;
 
-	memset(m_aggregatedCostsDir,0,m_height*m_width*m_maxDisp*sizeof(unsigned int));
+	memset(m_aggregatedCostsDir,0,m_buffSize);
 
 	// from right to left
 	if (p.x < 0) {
@@ -327,10 +343,12 @@ void SGM::initAggregateCostDir(Path p)
 	}
 
 }
-void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, unsigned int* currentAccPtr)
+inline void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, unsigned int* currentAccPtr)
 {
 	// Add current cost
 	memcpy(currentAccPtr,currCostPtr,m_maxDisp*sizeof(unsigned int));
+	// Can be precalculated
+	unsigned int prevMin = *min_element(priorAccPtr, (unsigned int*)(priorAccPtr + m_maxDisp));
 
 	// Calculate minimum of previous accumulation
 	for(int d = 0;  d < m_maxDisp; d++){
@@ -343,37 +361,33 @@ void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, uns
 			}
 			// Small penalty
 			else if( abs(d-d_prev) == 1){
-				minPrevCost = min(minPrevCost, priorAccPtr[d_prev] + m_penalty1);
+				minPrevCost = min(minPrevCost, (unsigned int)(priorAccPtr[d_prev] + m_penalty1));
 			}
 			// Large penalty
 			else{
-				minPrevCost = min(minPrevCost, priorAccPtr[d_prev] + m_penalty2);
+				minPrevCost = min(minPrevCost, (unsigned int)(priorAccPtr[d_prev] + m_penalty2));
 			}
 		}
 		// Add prior cost
-		*currentAccPtr += minPrevCost;
+		currentAccPtr[d] += minPrevCost;
 		// Normalize
-		*currentAccPtr -= *min_element(priorAccPtr,priorAccPtr + m_maxDisp);
+		currentAccPtr[d] -= prevMin;
 		// Calculate next
-		currentAccPtr++;
+		//currentAccPtr++;
 	}
 }
 void SGM::computeDisparityMap()
 {
-	float* ptr = m_disparityMap;
 	unsigned int* aggCostPtr = m_aggregatedCosts;
 	unsigned int* costPtr = m_CostData;
 
-	for (int y = 0; y < m_height; y++) {
-		for (int x = 0; x < m_width; x++) {
+	for (int i = 0; i < m_height * m_width; i++) {
+		// Index is Disparity
+		m_disparityMap[i] = min_element(aggCostPtr, aggCostPtr + m_maxDisp)	- aggCostPtr;
 
-			// Index is Disparity
-			int minIdx = min_element(aggCostPtr, aggCostPtr + m_maxDisp)- aggCostPtr;
-			*ptr++ = minIdx;
+		costPtr += m_maxDisp;
+		aggCostPtr += m_maxDisp;
 
-			costPtr += m_maxDisp;
-			aggCostPtr += m_maxDisp;
-		}
 	}
 }
 bool SGM::processImagePair(Image* imgLeft, Image* imgRight)

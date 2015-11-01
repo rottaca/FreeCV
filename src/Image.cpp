@@ -36,64 +36,53 @@ Image::Image(int width, int height, PixelFormat f, unsigned char* data, bool cop
 Image::~Image() {
 	releaseData();
 }
-void Image::init(int width, int height, PixelFormat f, unsigned char* data, bool copyData)
+bool Image::init(int width, int height, PixelFormat f, unsigned char* data, bool copyData)
 {
+	bool recreateBuffer = m_width != width ||
+			m_height != height ||
+			m_format != f ||
+			(data != NULL && copyData && !ownsMem());
+
 	m_width = width;
 	m_height = height;
 	m_format = f;
 
+	size_t buffSize = 0;
+	switch (f) {
+	case PF_GRAYSCALE_8:
+		buffSize = width * height;
+		m_channels = 1;
+		break;
+	case PF_RGB_888:
+		buffSize = width * height * 3;
+		m_channels = 3;
+		break;
+	case PF_FLOAT_32:
+		buffSize = width * height * sizeof(float);
+		m_channels = sizeof(float);
+		break;
+	case PF_YUYV:
+		buffSize = width * height * 2;
+		m_channels = 3;
+		break;
+	default:
+		m_data = NULL;
+		buffSize = 0;
+		m_channels = 0;
+		return false;
+	}
+
+	if(recreateBuffer)
+		m_data = new unsigned char[buffSize];
+
 	if (data != NULL) {
 		m_ownMem = copyData;
-		if (!copyData){
+		if (!copyData)
 			m_data = data;
-		}
-		else {
-			size_t buffSize = 0;
-			switch (f) {
-			case PF_GRAYSCALE_8:
-				buffSize = width * height;
-				m_channels = 1;
-				break;
-			case PF_RGB_888:
-				buffSize = width * height * 3;
-				m_channels = 3;
-				break;
-			case PF_FLOAT_32:
-				buffSize = width * height * sizeof(float);
-				m_channels = sizeof(float);
-				break;
-			default:
-				m_data = NULL;
-				buffSize = 0;
-				m_channels = 0;
-				return;
-			}
-			m_data = new unsigned char[buffSize];
+		else
 			memcpy(m_data, data, buffSize);
-		}
-	} else {
-		m_ownMem = true;
-		size_t buffSize = 0;
-		switch (f) {
-		case PF_GRAYSCALE_8:
-			buffSize = width * height;
-			m_channels = 1;
-			break;
-		case PF_RGB_888:
-			buffSize = width * height * 3;
-			m_channels = 3;
-			break;
-		case PF_FLOAT_32:
-			buffSize = width * height * sizeof(float);
-			m_channels = sizeof(float);
-			break;
-		default:
-			m_channels = 0;
-			m_data = NULL;
-			return;
-		}
-		m_data = new unsigned char[buffSize];
 	}
+	return true;
 }
 
 void Image::releaseData(){

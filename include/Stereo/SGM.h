@@ -47,7 +47,7 @@ private:
 	void computeDisparityMap();
 
 	void initAggregateCostDir(Path p);
-	void evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, unsigned int* currentAccPtr);
+	inline void evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, unsigned int* currentAccPtr);
 
 
 private:
@@ -56,7 +56,7 @@ private:
 	unsigned int* m_aggregatedCosts;
 	unsigned int* m_aggregatedCostsDir;
 
-	int m_width,m_height, m_maxDisp;
+	int m_width,m_height, m_maxDisp, m_dataSize, m_buffSize;
 	unsigned int m_penalty1, m_penalty2;
 	bool m_isInitialized;
 	std::vector<Path> m_paths;

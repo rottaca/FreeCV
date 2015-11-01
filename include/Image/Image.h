@@ -20,7 +20,7 @@ namespace fcv {
 class Image {
 public:
 	typedef enum {
-		PF_GRAYSCALE_8, PF_RGB_888, PF_FLOAT_32
+		PF_GRAYSCALE_8, PF_RGB_888, PF_FLOAT_32, PF_YUYV
 	} PixelFormat;
 
 	Image();
@@ -104,7 +104,7 @@ public:
 		return s.str();
 	}
 
-	void init(int width, int height, PixelFormat f, unsigned char* data = NULL,
+	bool init(int width, int height, PixelFormat f, unsigned char* data = NULL,
 			bool copyData = false);
 
 private:
