@@ -51,14 +51,14 @@ int main(int argc, char **argv) {
 	fcv::SGM sgm;
 
 	std::vector<int> penalties1;
-//	penalties1.push_back(5);
-	penalties1.push_back(10);
+	penalties1.push_back(25);
+//	penalties1.push_back(10);
 //	penalties1.push_back(20);
 
 	std::vector<int> penalties2;
 //	penalties2.push_back(60);
 //	penalties2.push_back(80);
-	penalties2.push_back(100);
+	penalties2.push_back(200);
 
 	fcv::Image imgDisp(imgL.getWidth(), imgL.getHeight(),
 			fcv::Image::PF_FLOAT_32);
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 	for (int i1 = 0; i1 < penalties1.size(); i1++) {
 		for (int i2 = 0; i2 < penalties2.size(); i2++) {
 			sgm.updatePenalties(penalties1.at(i1),penalties2.at(i2));
-			sgm.init(imgL.getWidth(), imgL.getHeight(), 60);
+			sgm.init(imgL.getWidth(), imgL.getHeight(), 100);
 			sgm.processImagePair(&imgL, &imgR);
 
 //			fcv::Image imgCost(60, imgL.getWidth(), fcv::Image::PF_GRAYSCALE_8);

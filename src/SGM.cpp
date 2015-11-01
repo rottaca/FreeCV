@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <iostream>
 
+using namespace std;
+
 namespace fcv {
 
 SGM::SGM() {
@@ -118,7 +120,9 @@ void SGM::aggregateCost(){
 	// Create an aggregated costs buffer for each path
 	for(int p = 0; p < m_paths.size();p++){
 		Path path = m_paths.at(p);
-
+#ifndef NDEBUG
+		cout << "Aggregate Path: " << path.x << " " << path.y << endl;
+#endif
 		// Check which side of the image is the start and init the whole image border on that side
 		initAggregateCostDir(path);
 		// Offset to next pixel
@@ -130,6 +134,9 @@ void SGM::aggregateCost(){
 			// Accumulate costs
 			// Go from right to left on each line
 
+#ifndef NDEBUG
+		cout << "Aggregate X-Dir" << endl;
+#endif
 			for(int y = 0; y  < m_height; y++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight + y*addOneColumn;
@@ -137,14 +144,14 @@ void SGM::aggregateCost(){
 				costPtr = m_CostData  + idxTopRight + y*addOneColumn;
 
 
-//				std::cout << "loop: " << y << std::endl;
+//				cout << "loop: " << y << endl;
 				// Pointer still in image?
 				xCurr = m_width-1;
 				yCurr = y;
 				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
 
 
-//					std::cout << "x: "<< x << std::endl;
+//					cout << "x: "<< x << endl;
 					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
 
 					aggrcostPtrDirPrev = aggrcostPtrDir;
@@ -159,6 +166,9 @@ void SGM::aggregateCost(){
 		else if (path.x > 0) {
 			// Accumulate costs
 			// Go from right to left on each line
+#ifndef NDEBUG
+		cout << "Aggregate X-Dir" << endl;
+#endif
 			for(int y = 0; y  < m_height ; y++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + y*addOneColumn;
@@ -174,7 +184,7 @@ void SGM::aggregateCost(){
 				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
 
 
-//					std::cout << "x: "<< x << std::endl;
+//					cout << "x: "<< x << endl;
 					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
 
 					aggrcostPtrDirPrev = aggrcostPtrDir;
@@ -190,6 +200,9 @@ void SGM::aggregateCost(){
 		{
 			// Accumulate costs
 			// Go from right to left on each line
+#ifndef NDEBUG
+		cout << "Aggregate Y-Dir" << endl;
+#endif
 			for(int x = 0; x  < m_width ; x++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft + x*addOneRow;
@@ -217,6 +230,9 @@ void SGM::aggregateCost(){
 
 			// Accumulate costs
 			// Go from right to left on each line
+#ifndef NDEBUG
+		cout << "Aggregate Y-Dir" << endl;
+#endif
 			for(int x = 0; x  < m_width ; x++){
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneRow + addOneColumn;
@@ -318,26 +334,26 @@ void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, uns
 
 	// Calculate minimum of previous accumulation
 	for(int d = 0;  d < m_maxDisp; d++){
-		unsigned int minPrevCost = std::numeric_limits<unsigned int>::max();
+		unsigned int minPrevCost = numeric_limits<unsigned int>::max();
 
 		for(int d_prev = 0;  d_prev < m_maxDisp; d_prev++){
 			// No penalty
 			if(d == d_prev){
-				minPrevCost = std::min(minPrevCost,priorAccPtr[d_prev]);
+				minPrevCost = min(minPrevCost,priorAccPtr[d_prev]);
 			}
 			// Small penalty
 			else if( abs(d-d_prev) == 1){
-				minPrevCost = std::min(minPrevCost, priorAccPtr[d_prev] + m_penalty1);
+				minPrevCost = min(minPrevCost, priorAccPtr[d_prev] + m_penalty1);
 			}
 			// Large penalty
 			else{
-				minPrevCost = std::min(minPrevCost, priorAccPtr[d_prev] + m_penalty2);
+				minPrevCost = min(minPrevCost, priorAccPtr[d_prev] + m_penalty2);
 			}
 		}
 		// Add prior cost
 		*currentAccPtr += minPrevCost;
 		// Normalize
-		*currentAccPtr -= *std::min_element(priorAccPtr,priorAccPtr + m_maxDisp);
+		*currentAccPtr -= *min_element(priorAccPtr,priorAccPtr + m_maxDisp);
 		// Calculate next
 		currentAccPtr++;
 	}
@@ -352,7 +368,7 @@ void SGM::computeDisparityMap()
 		for (int x = 0; x < m_width; x++) {
 
 			// Index is Disparity
-			int minIdx = std::min_element(aggCostPtr, aggCostPtr + m_maxDisp)- aggCostPtr;
+			int minIdx = min_element(aggCostPtr, aggCostPtr + m_maxDisp)- aggCostPtr;
 			*ptr++ = minIdx;
 
 			costPtr += m_maxDisp;
@@ -366,10 +382,19 @@ bool SGM::processImagePair(Image* imgLeft, Image* imgRight)
 	assert(imgLeft->getWidth() == imgRight->getWidth() && imgLeft->getHeight() == imgRight->getHeight());
 	assert(imgLeft->getWidth() == m_width && imgLeft->getHeight() == m_height);
 
-	// Cost calculation
+#ifndef NDEBUG
+		cout << "Calculate Costs" << endl;
+#endif
+		// Cost calculation
 	calculateCost(imgLeft,imgRight);
+#ifndef NDEBUG
+		cout << "Aggregate Costs" << endl;
+#endif
 	// Aggreate calculation
 	aggregateCost();
+#ifndef NDEBUG
+		cout << "Compute Disparity Map" << endl;
+#endif
 	// Calculate Disparity Map
 	computeDisparityMap();
 
