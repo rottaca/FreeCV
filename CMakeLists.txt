@@ -1,6 +1,13 @@
 cmake_minimum_required (VERSION 2.6)
 PROJECT(FreeCV)
 
+FIND_PACKAGE( OpenMP REQUIRED)
+if(OPENMP_FOUND)
+    message("OPENMP FOUND")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 SET(SOURCE_FILES 
     src/Logger.cpp
@@ -15,37 +22,43 @@ SET(SOURCE_FILES
     src/SGM.cpp
     src/VideoCapture.cpp
     src/ColorConvert.cpp
+    src/PointCloudCreator.cpp
 )
 
 SET(HEADER_FILES
-    include/FreeCV.h
+    include/FreeCV/FreeCV.h
     
-    include/Core/Logger.h
-    include/Core/Macros.h
-    include/Core/Matrix.h
-    include/Core/Vector.h
-    include/Core/Rectangle.h
+    include/FreeCV/Core/Logger.h
+    include/FreeCV/Core/Macros.h
+    include/FreeCV/Core/Matrix.h
+    include/FreeCV/Core/Vector.h
+    include/FreeCV/Core/Rectangle.h
     
-    include/Image/Image.h
-    include/Image/ImageFileManager.h
-    include/Image/Histogram.h
-    include/Image/Filter.h
-    include/Image/Transform.h
-    include/Image/ColorConvert.h
+    include/FreeCV/Image/Image.h
+    include/FreeCV/Image/ImageFileManager.h
+    include/FreeCV/Image/Histogram.h
+    include/FreeCV/Image/Filter.h
+    include/FreeCV/Image/Transform.h
+    include/FreeCV/Image/ColorConvert.h
     
-    include/Stereo/SGM.h
+    include/FreeCV/Stereo/SGM.h
+    include/FreeCV/Stereo/PointCloudCreator.h
     
-    include/IO/VideoCapture.h
+    include/FreeCV/IO/VideoCapture.h
 )
 
 
-ADD_LIBRARY(FreeCV SHARED ${SOURCE_FILES} ${HEADER_FILES} )
+ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} )
 
-INCLUDE_DIRECTORIES(FreeCV include)
+target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+    # Headers used from source/build location:
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    # Headers used from the installed location:
+    "$<INSTALL_INTERFACE:include>"
+)
 
 SET(TARGET FreeCV PROPERTY CMAKE_C_FLAGS_DEBUG "-DDEBUG")
 SET(TARGET FreeCV PROPERTY CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
-
 
 SET(TEST_SOURCE_FILES
     testMain.cpp

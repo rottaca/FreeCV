@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Core/Logger.h"
+#include "FreeCV/Core/Logger.h"
 
 namespace fcv {
 

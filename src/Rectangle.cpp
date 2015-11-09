@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Core/Rectangle.h"
+#include "FreeCV/Core/Rectangle.h"
 
 namespace fcv {
 

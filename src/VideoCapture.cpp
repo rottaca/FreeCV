@@ -1,4 +1,4 @@
-#include "IO/VideoCapture.h"
+#include "FreeCV/IO/VideoCapture.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -277,7 +277,7 @@ bool VideoCapture::grabFrame(Image* frame) {
 	FD_SET(devFd, &fds);
 	struct timeval tv = { 0 };
 	tv.tv_sec = 0;
-	tv.tv_usec = 10000;
+	tv.tv_usec = 100000;
 	int r = select(devFd + 1, &fds, NULL, NULL, &tv);
 	if (-1 == r) {
 		perror("Waiting for Frame");

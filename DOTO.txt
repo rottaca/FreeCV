@@ -1,0 +1,3 @@
+- Use LOGGER to print text messages ! (SGM, VideoCapture,..)
+- Image, Dynamic Matrix/Vektor klasse checken nach speicherlecks!
+- 

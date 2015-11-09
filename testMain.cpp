@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "FreeCV.h"
+#include "FreeCV/FreeCV.h"
 #include <iostream>
 #include <unistd.h>
 
@@ -44,74 +44,80 @@ int main(int argc, char **argv) {
 //	fcv::imageHoughTransform(&img6,&img3);
 //	fcv::ImageFileManager::saveImage(&img3,"hough.pgm",fcv::ImageFileManager::PGM_ASCII);
 
-//	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
-//	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
+	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
+	fcv::Image imgLColor = fcv::ImageFileManager::loadImage("stereo_left_rgb.ppm");
+	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
+
+	assert(imgL.isValid());
+	assert(imgLColor.isValid());
+	assert(imgR.isValid());
+
+	fcv::SGM sgm;
+	fcv::PointCloudCreator pcc;
+
+	sgm.init(imgL.getWidth(), imgL.getHeight(), 60);
+	sgm.updatePenalties(25, 250);
+	double memUsage = sgm.calcExpectedMemoryUsage();
+
+	std::cout << "Expected Memory Usage: " << memUsage / (1024*1024) << " MegaByte" << std::endl;
+
+	fcv::Vector2f c;
+	c[0] = imgL.getWidth()/2;
+	c[1] = imgL.getHeight()/2;
+	pcc.init(c,150,0.17);
+
+	fcv::Image imgDispL(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
+	fcv::Image imgDispR(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
+
+	clock_t time = clock();
+
+	sgm.processImagePair(&imgL, &imgR);
+	memcpy(imgDispL.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
+
+	sgm.processImagePair(&imgL, &imgR, false);
+	memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
+
+	std::cout << (float) (clock() - time) * 1000 / CLOCKS_PER_SEC << " ms" << std::endl;
+
+	fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
+
+	fcv::PointCloudCreator::PointCloud points;
+	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
+	fcv::PointCloudCreator::saveToPly("data.ply", &points);
 //
-//	assert(imgL.isValid());
-//	assert(imgR.isValid());
+	fcv::Image imgDispColor;
+//	fcv::convertPxFormat(&imgDispL, &imgDisp8Bit, fcv::FLOAT_TO_GRAY);
+//			fcv::filterMedian(&imgDisp8Bit,&imgDisp8Bit,3);
+	fcv::convertToPseudoColor(&imgDispL, &imgDispColor, 0 , 60, 0, 120);
+
+	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",
+			fcv::ImageFileManager::PPM_BINARY);
+
+	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
+
+	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
+			fcv::ImageFileManager::PPM_BINARY);
+
+
+//	fcv::PointCloudCreator::PointCloud points;
+//	fcv::PointCloudCreator::loadFromPly("data.ply",&points);
+//	fcv::PointCloudCreator::saveToPly("data.ply",&points);
+
+//	fcv::VideoCapture vc;
+//	vc.openAndInitDev("/dev/video0");
+//	vc.startCapture();
+//	usleep(500000);
+//	fcv::Image imgRaw, imgRGB;
+//	if(vc.grabFrame(&imgRaw)){
 //
-//	fcv::SGM sgm;
+//		fcv::convertPxFormat(&imgRaw,&imgRGB,fcv::YUYV_TO_RGB_888);
 //
-//	std::vector<int> penalties1;
-//	penalties1.push_back(25);
-////	penalties1.push_back(10);
-////	penalties1.push_back(20);
-//
-//	std::vector<int> penalties2;
-////	penalties2.push_back(60);
-////	penalties2.push_back(80);
-//	penalties2.push_back(200);
-//
-//	fcv::Image imgDisp(imgL.getWidth(), imgL.getHeight(),
-//			fcv::Image::PF_FLOAT_32);
-//
-//	for (int i1 = 0; i1 < penalties1.size(); i1++) {
-//		for (int i2 = 0; i2 < penalties2.size(); i2++) {
-//			sgm.updatePenalties(penalties1.at(i1),penalties2.at(i2));
-//			sgm.init(imgL.getWidth(), imgL.getHeight(), 100);
-//			clock_t time = clock();
-//			sgm.processImagePair(&imgL, &imgR);
-//			std::cout << (float)(clock()-time)*1000 / CLOCKS_PER_SEC << " ms" << std::endl;
-//
-////			fcv::Image imgCost(60, imgL.getWidth(), fcv::Image::PF_GRAYSCALE_8);
-//
-////			unsigned int* costData = sgm.getCostData();
-////			unsigned char* imgData = imgCost.getPtr<unsigned char>();
-////
-////			for (int x = 0; x < imgL.getWidth(); x++) {
-////				for (int d = 0; d < 60; d++) {
-////					*imgData++ = *costData++;
-////				}
-////			}
-////			fcv::ImageFileManager::saveImage(&imgCost, "cost.pgm",
-////					fcv::ImageFileManager::PGM_BINARY);
-//
-//			memcpy(imgDisp.getPtr<float*>(), sgm.getDisparityData(),
-//					imgL.getWidth() * imgL.getHeight() * sizeof(float));
-//
-//			std::ostringstream str;
-//			str << "disp_" << penalties1.at(i1) << "_" << penalties2.at(i2) << ".pgm";
-//
-//			fcv::ImageFileManager::saveImage(&imgDisp, str.str(),
-//					fcv::ImageFileManager::PGM_BINARY);
-//		}
+//		fcv::ImageFileManager::saveImage(&imgRGB, "test.ppm",
+//				fcv::ImageFileManager::PPM_BINARY);
 //	}
-
-	fcv::VideoCapture vc;
-	vc.openAndInitDev("/dev/video0");
-	vc.startCapture();
-	usleep(500000);
-	fcv::Image imgRaw, imgRGB;
-	if(vc.grabFrame(&imgRaw)){
-
-		fcv::convertPxFormat(&imgRaw,&imgRGB,fcv::YUYV_TO_RGB_888);
-
-		fcv::ImageFileManager::saveImage(&imgRGB, "test.ppm",
-				fcv::ImageFileManager::PPM_BINARY);
-	}
-	else
-	{
-		std::cout << "no Data" << std::endl;
-	}
+//	else
+//	{
+//		std::cout << "no Data" << std::endl;
+//	}
 }
 

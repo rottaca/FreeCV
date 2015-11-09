@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Image/Filter.h"
+#include "FreeCV/Image/Filter.h"
 #include "math.h"
 
 namespace fcv {

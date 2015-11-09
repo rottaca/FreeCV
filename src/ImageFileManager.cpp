@@ -5,11 +5,12 @@
  *      Author: andreas
  */
 
-#include "Image/ImageFileManager.h"
+#include "FreeCV/Image/ImageFileManager.h"
 #include <fstream>
 #include "stdlib.h"
 #include <string>
 #include <vector>
+#include "FreeCV/Core/Logger.h"
 
 namespace fcv {
 
@@ -47,8 +48,10 @@ Image ImageFileManager::loadImage(std::string fileName, ImageFileType type) {
 		if (fileExt.compare("pgm") == 0 || fileExt.compare("ppm") == 0) {
 			std::ifstream file;
 			file.open(fileName.c_str());
-			if (!file.is_open())
+			if (!file.is_open()){
+				LOG_ERROR("Can't open Image!");
 				return invalidImg;
+			}
 
 			file >> tmp;
 
@@ -60,8 +63,10 @@ Image ImageFileManager::loadImage(std::string fileName, ImageFileType type) {
 				type = PGM_BINARY;
 			else if (tmp.compare("P6") == 0)
 				type = PPM_BINARY;
-		} else
+		} else{
+			LOG_ERROR("Invalid File ending (pgm or ppm)!");
 			return invalidImg;
+		}
 	}
 
 	switch (type) {
@@ -69,16 +74,20 @@ Image ImageFileManager::loadImage(std::string fileName, ImageFileType type) {
 		std::ifstream file;
 		file.open(fileName.c_str());
 		file >> tmp;
-		if (tmp.compare("P3") != 0)
+		if (tmp.compare("P3") != 0){
+			LOG_ERROR("Invalid Magic number!");
 			return invalidImg;
+		}
 
 		int width;
 		int height;
 
 		tmp = getNextValidLine(file);
 		std::vector<std::string> s = split(tmp,' ');
-		if (s.size() != 2)
+		if (s.size() != 2){
+			LOG_ERROR("Invalid file header!");
 			return invalidImg;
+		}
 
 		width = atoi(s.at(0).c_str());
 		height = atoi(s.at(1).c_str());
@@ -100,16 +109,20 @@ Image ImageFileManager::loadImage(std::string fileName, ImageFileType type) {
 		std::ifstream file;
 		file.open(fileName.c_str());
 		file >> tmp;
-		if (tmp.compare("P6") != 0)
+		if (tmp.compare("P6") != 0){
+			LOG_ERROR("Invalid Magic number!");
 			return invalidImg;
+		}
 
 		int width;
 		int height;
 
 		tmp = getNextValidLine(file);
 		std::vector<std::string> s = split(tmp,' ');
-		if (s.size() != 2)
+		if (s.size() != 2){
+			LOG_ERROR("Invalid file header!");
 			return invalidImg;
+		}
 
 		width = atoi(s.at(0).c_str());
 		height = atoi(s.at(1).c_str());
@@ -127,16 +140,20 @@ Image ImageFileManager::loadImage(std::string fileName, ImageFileType type) {
 		std::ifstream file;
 		file.open(fileName.c_str());
 		file >> tmp;
-		if (tmp.compare("P2") != 0)
+		if (tmp.compare("P2") != 0){
+			LOG_ERROR("Invalid Magic number!");
 			return invalidImg;
+		}
 
 		int width;
 		int height;
 
 		tmp = getNextValidLine(file);
 		std::vector<std::string> s = split(tmp,' ');
-		if (s.size() != 2)
+		if (s.size() != 2){
+			LOG_ERROR("Invalid file header!");
 			return invalidImg;
+		}
 
 		width = atoi(s.at(0).c_str());
 		height = atoi(s.at(1).c_str());
@@ -158,17 +175,20 @@ Image ImageFileManager::loadImage(std::string fileName, ImageFileType type) {
 		std::ifstream file;
 		file.open(fileName.c_str());
 		file >> tmp;
-		if (tmp.compare("P5") != 0)
+		if (tmp.compare("P5") != 0){
+			LOG_ERROR("Invalid Magic number!");
 			return invalidImg;
+		}
 
 		int width;
 		int height;
 
 		tmp = getNextValidLine(file);
 		std::vector<std::string> s = split(tmp,' ');
-		if (s.size() != 2)
+		if (s.size() != 2){
+			LOG_ERROR("Invalid file header!");
 			return invalidImg;
-
+		}
 		width = atoi(s.at(0).c_str());
 		height = atoi(s.at(1).c_str());
 		tmp = getNextValidLine(file);
@@ -220,7 +240,8 @@ bool ImageFileManager::saveImage(Image* image, std::string fileName,
 
 			break;
 		default:
-			break;
+			LOG_ERROR("Invalid File format specifed!");
+			return false;
 		}
 
 		break;
@@ -259,8 +280,8 @@ bool ImageFileManager::saveImage(Image* image, std::string fileName,
 
 			break;
 		default:
+			LOG_ERROR("Invalid File format specifed!");
 			return false;
-			break;
 		}
 		break;
 	}
@@ -314,12 +335,13 @@ bool ImageFileManager::saveImage(Image* image, std::string fileName,
 
 			break;
 		default:
+			LOG_ERROR("Invalid File format specifed!");
 			return false;
-			break;
 		}
 		break;
 	}
 	default:
+		LOG_ERROR("Invalid pixel format specifed!");
 		return false;
 		break;
 	}

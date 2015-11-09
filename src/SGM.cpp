@@ -5,12 +5,13 @@
  *      Author: andreas
  */
 
-#include "Stereo/SGM.h"
+#include "FreeCV/Stereo/SGM.h"
 #include "assert.h"
 #include "stdlib.h"
 #include <limits>
 #include <algorithm>
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 
@@ -81,40 +82,46 @@ bool SGM::init(int width, int height, int maxDisp){
 }
 void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 {
-	unsigned int* costPtr = m_CostData;
-	unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>();
-	unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>();
+
+#pragma omp parallel for
 	for (int y = 0; y < m_height; y++) {
+		unsigned int* costPtr = m_CostData + m_width*m_maxDisp*y;
+		unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
+		unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(y);
 		for (int x = 0; x < m_width; x++) {
 			for (int d = 0; d < m_maxDisp; d++) {
 
-				if (x - d < 0)
-					*costPtr++ = 255;		// Sehr hohe kosten TODO: Richtig ?
-				else {
-					// TODO imgRightPtr nicht immer neu berechnen
-					*costPtr++ = abs((int) (*imgLeftPtr) - *(imgRightPtr - d));	// = |L(y,x) - R(y,x-d)|
+				if(m_Left2Right){
+					if (x - d < 0)
+						*costPtr++ = 255;		// Sehr hohe kosten TODO: Richtig ?
+					else {
+						// TODO imgRightPtr nicht immer neu berechnen
+						*costPtr++ = abs((*imgLeftPtr) - *(imgRightPtr - d));	// = |L(y,x) - R(y,x-d)|
+					}
+				}else{
+					if (x + d >= m_width)
+						*costPtr++ = 255;	// Sehr hohe kosten TODO: Richtig ?
+					else {
+						// TODO imgRightPtr nicht immer neu berechnen
+						*costPtr++ = abs((*imgRightPtr) - *(imgLeftPtr + d));// = |L(y,x-d) - R(y,x)|
+					}
 				}
 			}
 			imgLeftPtr++;
 			imgRightPtr++;
 		}
 	}
-//	// Scale to 11 bits
+	// Scale to 11 bits
 //	unsigned int max = *max_element(m_CostData,
-//			m_CostData + m_height * m_width * m_maxDisp);
+//			m_CostData + m_dataSize);
 //
 //	costPtr = m_CostData;
-//	for (int i = 0; i < m_height * m_width * m_maxDisp; i++)
-//		*costPtr++ *= (1<<11)/max;
-
+//	for (int i = 0; i < m_dataSize; i++)
+//		*costPtr++ = *costPtr * 2047 / max;
 
 }
 void SGM::aggregateCost(){
 
-	unsigned int* costPtr;
-	unsigned int* aggrcostPtr;
-	unsigned int* aggrcostPtrDirPrev;
-	unsigned int* aggrcostPtrDir;
 
 	int idxTopLeft = 0,
 	idxTopRight = (m_width-1) * m_maxDisp,
@@ -131,9 +138,9 @@ void SGM::aggregateCost(){
 	// Create an aggregated costs buffer for each path
 	for(int p = 0; p < m_paths.size();p++){
 		Path path = m_paths.at(p);
-#ifndef NDEBUG
+//#ifndef NDEBUG
 		cout << "Aggregate Path: " << path.x << " " << path.y << endl;
-#endif
+//#endif
 		// Check which side of the image is the start and init the whole image border on that side
 		initAggregateCostDir(path);
 		// Offset to next pixel
@@ -145,11 +152,14 @@ void SGM::aggregateCost(){
 			// Accumulate costs
 			// Go from right to left on each line
 
-#ifndef NDEBUG
-		cout << "Aggregate X-Dir" << endl;
-#endif
+//#ifndef NDEBUG
+		cout << "Aggregate -X-Dir" << endl;
+//#endif
 
 			for(int y = 0; y  < m_height; y++){
+				unsigned int* costPtr;
+				unsigned int* aggrcostPtrDirPrev;
+				unsigned int* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight + y*addOneColumn;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -178,11 +188,14 @@ void SGM::aggregateCost(){
 		else if (path.x > 0) {
 			// Accumulate costs
 			// Go from right to left on each line
-#ifndef NDEBUG
+//#ifndef NDEBUG
 		cout << "Aggregate X-Dir" << endl;
-#endif
+//#endif
 
 			for(int y = 0; y  < m_height ; y++){
+				unsigned int* costPtr;
+				unsigned int* aggrcostPtrDirPrev;
+				unsigned int* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + y*addOneColumn;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -213,11 +226,14 @@ void SGM::aggregateCost(){
 		{
 			// Accumulate costs
 			// Go from right to left on each line
-#ifndef NDEBUG
-		cout << "Aggregate Y-Dir" << endl;
-#endif
+//#ifndef NDEBUG
+		cout << "Aggregate -Y-Dir" << endl;
+//#endif
 
 			for(int x = 0; x  < m_width ; x++){
+				unsigned int* costPtr;
+				unsigned int* aggrcostPtrDirPrev;
+				unsigned int* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft + x*addOneRow;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -244,11 +260,14 @@ void SGM::aggregateCost(){
 
 			// Accumulate costs
 			// Go from right to left on each line
-#ifndef NDEBUG
+//#ifndef NDEBUG
 		cout << "Aggregate Y-Dir" << endl;
-#endif
+//#endif
 
 			for(int x = 0; x  < m_width ; x++){
+				unsigned int* costPtr;
+				unsigned int* aggrcostPtrDirPrev;
+				unsigned int* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneRow + addOneColumn;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -378,39 +397,126 @@ inline void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostP
 }
 void SGM::computeDisparityMap()
 {
-	unsigned int* aggCostPtr = m_aggregatedCosts;
-	unsigned int* costPtr = m_CostData;
 
+#pragma omp parallel for
 	for (int i = 0; i < m_height * m_width; i++) {
+
+		unsigned int* aggCostPtr = m_aggregatedCosts + m_maxDisp*i;
+		unsigned int* costPtr = m_CostData + m_maxDisp*i;
+
 		// Index is Disparity
 		m_disparityMap[i] = min_element(aggCostPtr, aggCostPtr + m_maxDisp)	- aggCostPtr;
 
-		costPtr += m_maxDisp;
-		aggCostPtr += m_maxDisp;
-
+//		costPtr += m_maxDisp;
+//		aggCostPtr += m_maxDisp;
 	}
 }
-bool SGM::processImagePair(Image* imgLeft, Image* imgRight)
+bool SGM::processImagePair(Image* imgLeft, Image* imgRight, bool Left2Right)
 {
+	m_Left2Right = Left2Right;
 	assert(imgLeft->getFormat() == Image::PF_GRAYSCALE_8 && imgRight->getFormat() == Image::PF_GRAYSCALE_8);
 	assert(imgLeft->getWidth() == imgRight->getWidth() && imgLeft->getHeight() == imgRight->getHeight());
 	assert(imgLeft->getWidth() == m_width && imgLeft->getHeight() == m_height);
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
 		cout << "Calculate Costs" << endl;
-#endif
+//#endif
 		// Cost calculation
 	calculateCost(imgLeft,imgRight);
-#ifndef NDEBUG
+//#ifndef NDEBUG
 		cout << "Aggregate Costs" << endl;
-#endif
+//#endif
 	// Aggreate calculation
 	aggregateCost();
-#ifndef NDEBUG
+//#ifndef NDEBUG
 		cout << "Compute Disparity Map" << endl;
-#endif
+//#endif
 	// Calculate Disparity Map
 	computeDisparityMap();
+
+	return true;
+}
+
+bool SGM::l2rConsistencyCheck(Image* dispLeft, Image* dispRight, int threshold)
+{
+	assert(dispLeft->getFormat() == Image::PF_FLOAT_32 && dispRight->getFormat() == Image::PF_FLOAT_32);
+	assert(dispLeft->getWidth() == dispRight->getWidth() && dispLeft->getHeight() == dispRight->getHeight());
+
+	float* dispLeftPtr = dispLeft->getPtr<float>(0);
+	float* dispRightPtr = dispRight->getPtr<float>(0);
+	for (int y = 0; y < dispRight->getHeight(); y++) {
+
+		for (int x = 0; x < dispRight->getWidth(); x++) {
+
+			float dispL = *dispLeftPtr;
+			int offsRight = roundf(dispL);
+
+			if(offsRight < 0)
+			{
+				*dispLeftPtr = -1;
+				dispLeftPtr++;
+				dispRightPtr++;
+				continue;
+			}
+
+			if(x - offsRight < 0 || x - offsRight >= dispRight->getWidth())
+			{
+				*dispLeftPtr = -1;
+			}
+			else
+			{
+				float dispR = *(dispRightPtr - offsRight);
+
+				if(abs((int)(dispL - dispR)) > threshold)
+				{
+					*dispLeftPtr = -1;
+					float* p = dispRightPtr - offsRight;
+					*p = -1;
+				}
+			}
+
+			dispLeftPtr++;
+			dispRightPtr++;
+		}
+	}
+
+	dispLeftPtr = dispLeft->getPtr<float>();
+	dispRightPtr = dispRight->getPtr<float>();
+	for (int y = 0; y < dispRight->getHeight(); y++) {
+
+		for (int x = 0; x < dispRight->getWidth(); x++) {
+
+			float dispR = *dispRightPtr;
+			int offsetLeft = roundf(dispR);
+
+			if(offsetLeft < 0)
+			{
+				*dispRightPtr = -1;
+				dispLeftPtr++;
+				dispRightPtr++;
+				continue;
+			}
+
+			if(x + offsetLeft < 0 || x + offsetLeft >= dispRight->getWidth())
+			{
+				*dispRightPtr = -1;
+			}
+			else
+			{
+				float dispL = *(dispLeftPtr + offsetLeft);
+
+				if(abs((int)(dispL - dispR)) > threshold)
+				{
+					*dispRightPtr = -1;
+					float* p = dispLeftPtr + offsetLeft ;
+					*p = -1;
+				}
+			}
+
+			dispLeftPtr++;
+			dispRightPtr++;
+		}
+	}
 
 	return true;
 }

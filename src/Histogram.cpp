@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Image/Histogram.h"
+#include "FreeCV/Image/Histogram.h"
 #include "assert.h"
 
 namespace fcv {

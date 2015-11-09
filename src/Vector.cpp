@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Core/Vector.h"
+#include "FreeCV/Core/Vector.h"
 
 namespace fcv {
 

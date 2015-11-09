@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "Core/Matrix.h"
+#include "FreeCV/Core/Matrix.h"
 
 namespace fcv {
 

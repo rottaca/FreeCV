@@ -5,36 +5,48 @@
  *      Author: andreas
  */
 
-#include "Image/Image.h"
+#include "FreeCV/Image/Image.h"
+#include "FreeCV/Core/Logger.h"
 
 namespace fcv {
 
 Image::Image() {
-	m_width = 0;
-	m_height = 0;
-	m_data = NULL;
-	m_ownMem = false;
-	m_format = PF_GRAYSCALE_8;
+	initEmpty();
 }
 Image::Image(const Image& img)
 {
-	init(img.getWidth(),img.getHeight(),img.getFormat(),img.getPtr<unsigned char>(),true);
+	initEmpty();
+	if(img.isValid())
+		init(img.getWidth(),img.getHeight(),img.getFormat(),img.getPtr<unsigned char>(),true);
 }
 Image::Image(Image img, bool copyData)
 {
-	init(img.getWidth(),img.getHeight(),img.getFormat(),img.getPtr<unsigned char>(),copyData);
+	initEmpty();
+	if(img.isValid())
+		init(img.getWidth(),img.getHeight(),img.getFormat(),img.getPtr<unsigned char>(),copyData);
 }
 Image::Image(int width, int height, PixelFormat f)
 {
+	initEmpty();
 	init(width,height,f);
 }
 Image::Image(int width, int height, PixelFormat f, unsigned char* data, bool copyData)
 {
+	initEmpty();
 	init(width,height,f,data,copyData);
 }
 
 Image::~Image() {
 	releaseData();
+}
+void Image::initEmpty()
+{
+	m_width = 0;
+	m_height = 0;
+	m_data = NULL;
+	m_ownMem = false;
+	m_format = PF_GRAYSCALE_8;
+	m_channels = 0;
 }
 bool Image::init(int width, int height, PixelFormat f, unsigned char* data, bool copyData)
 {
@@ -66,17 +78,19 @@ bool Image::init(int width, int height, PixelFormat f, unsigned char* data, bool
 		m_channels = 3;
 		break;
 	default:
-		m_data = NULL;
-		buffSize = 0;
-		m_channels = 0;
+		initEmpty();
+		LOG_ERROR("Invalid Pixelformat speicifed!");
 		return false;
 	}
 
-	if(recreateBuffer)
+	if(recreateBuffer){
+		releaseData();
 		m_data = new unsigned char[buffSize];
+		m_ownMem = true;
+	}
 
 	if (data != NULL) {
-		m_ownMem = copyData;
+		m_ownMem = copyData || recreateBuffer;
 		if (!copyData)
 			m_data = data;
 		else
@@ -92,11 +106,11 @@ void Image::releaseData(){
 		m_ownMem = false;
 	}
 }
-Image& Image::operator= (const Image& other){
-    if (this != &other) {
-    	releaseData();
-    	init(other.getWidth(),other.getHeight(),other.getFormat(),other.getPtr<unsigned char>(),true);
-    }
-    return *this;
-}
+//Image& Image::operator= (const Image& other){
+//    if (this != &other) {
+//    	releaseData();
+//    	init(other.getWidth(),other.getHeight(),other.getFormat(),other.getPtr<unsigned char>(),true);
+//    }
+//    return *this;
+//}
 } /* namespace fcv */
