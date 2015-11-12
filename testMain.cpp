@@ -85,20 +85,18 @@ int main(int argc, char **argv) {
 		sgm.processImagePair(&imgL, &imgR);
 		memcpy(imgDispL.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
 
-//		sgm.processImagePair(&imgL, &imgR, false);
-//		memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
-//		{
-//			fcv::StopWatch sw("L2R Consistency Check");
-//			fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
-//		}
+		sgm.processImagePair(&imgL, &imgR, false);
+		memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
+		{
+			fcv::StopWatch sw("L2R Consistency Check");
+			fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
+		}
 	}
-//	fcv::PointCloudCreator::PointCloud points;
-//	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
-//	fcv::PointCloudCreator::saveToPly("data.ply", &points);
-//
+	fcv::PointCloudCreator::PointCloud points;
+	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
+	fcv::PointCloudCreator::saveToPly("data.ply", &points);
+
 	fcv::Image imgDispColor;
-//	fcv::convertPxFormat(&imgDispL, &imgDisp8Bit, fcv::FLOAT_TO_GRAY);
-//			fcv::filterMedian(&imgDisp8Bit,&imgDisp8Bit,3);
 	fcv::convertToPseudoColor(&imgDispL, &imgDispColor, 0 , 60, 0, 120);
 
 	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",

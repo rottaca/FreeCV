@@ -6,6 +6,7 @@
  */
 
 #include "FreeCV/Stereo/SGM.h"
+#include "FreeCV/Core/StopWatch.h"
 #include "assert.h"
 #include "stdlib.h"
 #include <limits>
@@ -63,15 +64,15 @@ bool SGM::init(int width, int height, int maxDisp){
 	m_height = height;
 	m_maxDisp = maxDisp;
 	m_dataSize = m_width*m_height*m_maxDisp;
-	m_buffSize = m_dataSize*sizeof(unsigned int);
+	m_buffSize = m_dataSize*sizeof(unsigned short);
 
-	m_CostData = new unsigned int[width*height*maxDisp];
+	m_CostData = new unsigned short[width*height*maxDisp];
 	memset(m_CostData,0,m_dataSize);
 
-	m_aggregatedCosts = new unsigned int[width*height*maxDisp];
+	m_aggregatedCosts = new unsigned short[width*height*maxDisp];
 	memset(m_aggregatedCosts,0,m_buffSize);
 
-	m_aggregatedCostsDir = new unsigned int[width*height*maxDisp];
+	m_aggregatedCostsDir = new unsigned short[width*height*maxDisp];
 	memset(m_aggregatedCostsDir,0,m_buffSize);
 
 	m_disparityMap = new float[width*height];
@@ -85,7 +86,7 @@ void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 
 #pragma omp parallel for
 	for (int y = 0; y < m_height; y++) {
-		unsigned int* costPtr = m_CostData + m_width*m_maxDisp*y;
+		unsigned short* costPtr = m_CostData + m_width*m_maxDisp*y;
 		unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
 		unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(y);
 		for (int x = 0; x < m_width; x++) {
@@ -112,7 +113,7 @@ void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 		}
 	}
 	// Scale to 11 bits
-//	unsigned int max = *max_element(m_CostData,
+//	ununsigned shortax = *max_element(m_CostData,
 //			m_CostData + m_dataSize);
 //
 //	costPtr = m_CostData;
@@ -157,9 +158,9 @@ void SGM::aggregateCost(){
 //#endif
 
 			for(int y = 0; y  < m_height; y++){
-				unsigned int* costPtr;
-				unsigned int* aggrcostPtrDirPrev;
-				unsigned int* aggrcostPtrDir;
+				unsigned short* costPtr;
+				unsigned short* aggrcostPtrDirPrev;
+				unsigned short* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight + y*addOneColumn;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -193,9 +194,9 @@ void SGM::aggregateCost(){
 //#endif
 
 			for(int y = 0; y  < m_height ; y++){
-				unsigned int* costPtr;
-				unsigned int* aggrcostPtrDirPrev;
-				unsigned int* aggrcostPtrDir;
+				unsigned short* costPtr;
+				unsigned short* aggrcostPtrDirPrev;
+				unsigned short* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + y*addOneColumn;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -231,9 +232,9 @@ void SGM::aggregateCost(){
 //#endif
 
 			for(int x = 0; x  < m_width ; x++){
-				unsigned int* costPtr;
-				unsigned int* aggrcostPtrDirPrev;
-				unsigned int* aggrcostPtrDir;
+				unsigned short* costPtr;
+				unsigned short* aggrcostPtrDirPrev;
+				unsigned short* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft + x*addOneRow;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -265,9 +266,9 @@ void SGM::aggregateCost(){
 //#endif
 
 			for(int x = 0; x  < m_width ; x++){
-				unsigned int* costPtr;
-				unsigned int* aggrcostPtrDirPrev;
-				unsigned int* aggrcostPtrDir;
+				unsigned short* costPtr;
+				unsigned short* aggrcostPtrDirPrev;
+				unsigned short* aggrcostPtrDir;
 				// Point to last row
 				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneRow + addOneColumn;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
@@ -305,8 +306,8 @@ void SGM::aggregateCost(){
 }
 void SGM::initAggregateCostDir(Path p)
 {
-	unsigned int* costPtr;
-	unsigned int* aggrcostPtrDir;
+	unsigned short* costPtr;
+	unsigned short* aggrcostPtrDir;
 
 	int idxTopLeft = 0,
 	idxTopRight = (m_width-1) * m_maxDisp,
@@ -324,7 +325,7 @@ void SGM::initAggregateCostDir(Path p)
 		aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight;
 		// Copy Data
 		for (int h = 0; h < m_height; h++) {
-			memcpy(aggrcostPtrDir, costPtr, sizeof(unsigned int) * m_maxDisp);// Copy all DisparityCosts of a pixel
+			memcpy(aggrcostPtrDir, costPtr, sizeof(unsigned short) * m_maxDisp);// Copy all DisparityCosts of a pixel
 			costPtr += addOneColumn;
 			aggrcostPtrDir += addOneColumn;
 		}
@@ -337,7 +338,7 @@ void SGM::initAggregateCostDir(Path p)
 		aggrcostPtrDir = m_aggregatedCostsDir;
 		// Copy Data
 		for (int h = 0; h < m_height; h++) {
-			memcpy(aggrcostPtrDir, costPtr, sizeof(unsigned int) * m_maxDisp);// Copy all DisparitesCosts of a pixel
+			memcpy(aggrcostPtrDir, costPtr, sizeof(unsigned short) * m_maxDisp);// Copy all DisparitesCosts of a pixel
 			costPtr += addOneColumn;
 			aggrcostPtrDir += addOneColumn;
 		}
@@ -349,7 +350,7 @@ void SGM::initAggregateCostDir(Path p)
 		aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft;
 		// Copy Data
 		memcpy(aggrcostPtrDir, costPtr,
-				sizeof(unsigned int) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
+				sizeof(unsigned short) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
 	}
 	// From left to right
 	else if (p.y > 0) {
@@ -358,20 +359,20 @@ void SGM::initAggregateCostDir(Path p)
 		aggrcostPtrDir = m_aggregatedCostsDir;
 		// Copy Data
 		memcpy(aggrcostPtrDir, costPtr,
-				sizeof(unsigned int) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
+				sizeof(unsigned short) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
 	}
 
 }
-inline void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostPtr, unsigned int* currentAccPtr)
+inline void SGM::evaluatePath(unsigned short* priorAccPtr, unsigned short* currCostPtr, unsigned short* currentAccPtr)
 {
 	// Add current cost
-	memcpy(currentAccPtr,currCostPtr,m_maxDisp*sizeof(unsigned int));
+	memcpy(currentAccPtr,currCostPtr,m_maxDisp*sizeof(unsigned short));
 	// Can be precalculated
-	unsigned int prevMin = *min_element(priorAccPtr, (unsigned int*)(priorAccPtr + m_maxDisp));
+	unsigned short prevMin = *min_element(priorAccPtr, (unsigned short*)(priorAccPtr + m_maxDisp));
 
 	// Calculate minimum of previous accumulation
 	for(int d = 0;  d < m_maxDisp; d++){
-		unsigned int minPrevCost = numeric_limits<unsigned int>::max();
+		unsigned short minPrevCost = numeric_limits<unsigned short>::max();
 
 		for(int d_prev = 0;  d_prev < m_maxDisp; d_prev++){
 			// No penalty
@@ -380,11 +381,11 @@ inline void SGM::evaluatePath(unsigned int* priorAccPtr, unsigned int* currCostP
 			}
 			// Small penalty
 			else if( abs(d-d_prev) == 1){
-				minPrevCost = min(minPrevCost, (unsigned int)(priorAccPtr[d_prev] + m_penalty1));
+				minPrevCost = min(minPrevCost, (unsigned short)(priorAccPtr[d_prev] + m_penalty1));
 			}
 			// Large penalty
 			else{
-				minPrevCost = min(minPrevCost, (unsigned int)(priorAccPtr[d_prev] + m_penalty2));
+				minPrevCost = min(minPrevCost, (unsigned short)(priorAccPtr[d_prev] + m_penalty2));
 			}
 		}
 		// Add prior cost
@@ -401,8 +402,8 @@ void SGM::computeDisparityMap()
 #pragma omp parallel for
 	for (int i = 0; i < m_height * m_width; i++) {
 
-		unsigned int* aggCostPtr = m_aggregatedCosts + m_maxDisp*i;
-		unsigned int* costPtr = m_CostData + m_maxDisp*i;
+		unsigned short* aggCostPtr = m_aggregatedCosts + m_maxDisp*i;
+		unsigned short* costPtr = m_CostData + m_maxDisp*i;
 
 		// Index is Disparity
 		m_disparityMap[i] = min_element(aggCostPtr, aggCostPtr + m_maxDisp)	- aggCostPtr;
@@ -418,22 +419,24 @@ bool SGM::processImagePair(Image* imgLeft, Image* imgRight, bool Left2Right)
 	assert(imgLeft->getWidth() == imgRight->getWidth() && imgLeft->getHeight() == imgRight->getHeight());
 	assert(imgLeft->getWidth() == m_width && imgLeft->getHeight() == m_height);
 
-//#ifndef NDEBUG
-		cout << "Calculate Costs" << endl;
-//#endif
-		// Cost calculation
-	calculateCost(imgLeft,imgRight);
-//#ifndef NDEBUG
-		cout << "Aggregate Costs" << endl;
-//#endif
-	// Aggreate calculation
-	aggregateCost();
-//#ifndef NDEBUG
-		cout << "Compute Disparity Map" << endl;
-//#endif
-	// Calculate Disparity Map
-	computeDisparityMap();
-
+	cout << "Calculate Costs" << endl;
+	// Cost calculation
+	{
+		fcv::StopWatch sw("calculateCost");
+		calculateCost(imgLeft, imgRight);
+	}
+	cout << "Aggregate Costs" << endl;
+	{
+		fcv::StopWatch sw("aggregateCost");
+		// Aggreate calculation
+		aggregateCost();
+	}
+	cout << "Compute Disparity Map" << endl;
+	{
+		fcv::StopWatch sw("computeDisparityMap");
+		// Calculate Disparity Map
+		computeDisparityMap();
+	}
 	return true;
 }
 

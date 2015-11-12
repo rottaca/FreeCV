@@ -27,19 +27,17 @@ public:
 	unsigned short* getCostData(){
 		return m_CostData;
 	}
-	unsigned short* getDisparityData(){
+	float* getDisparityData(){
 		return m_disparityMap;
 	}
 
-	void updatePenalties(unsigned int p1, unsigned int p2){
-		if(255 + p2 > 0xFFFF)
-			LOG_WARNING("Your second penalty is possibly to high! This could cause overflows.");
+	void updatePenalties(unsigned short p1, unsigned short p2){
 		m_penalty1 = p1;
 		m_penalty2 = p2;
 	}
 
 	double calcExpectedMemoryUsage(){
-		return m_dataSize*6.0 + sizeof(unsigned short)*m_width*m_height;
+		return m_dataSize*sizeof(unsigned short)*3 + m_width*m_height*sizeof(float);
 	}
 
 private:
@@ -60,13 +58,12 @@ private:
 
 private:
 	unsigned short* m_CostData;
-	unsigned short* m_disparityMap;
+	float* m_disparityMap;
 	unsigned short* m_aggregatedCosts;
 	unsigned short* m_aggregatedCostsDir;
 
-	int m_width,m_height, m_maxDisp;
-	unsigned long m_dataSize, m_shortBuffSize;
-	unsigned int m_penalty1, m_penalty2;
+	int m_width,m_height, m_maxDisp, m_dataSize, m_buffSize;
+	unsigned short m_penalty1, m_penalty2;
 	bool m_isInitialized;
 	std::vector<Path> m_paths;
 
