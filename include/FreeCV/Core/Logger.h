@@ -33,7 +33,7 @@ namespace fcv {
 	#define LOG_INFO(TXT) printf("%s (%d) INFO: " TXT "\n", __FILE__, __LINE__)
 	#define LOG_WARNING(TXT) printf("%s (%d) WARNING: " TXT "\n", __FILE__, __LINE__)
 	#define LOG_FORMAT_ERROR(TXT_FMT, ...) printf("%s (%d) ERROR: " TXT_FMT "\n", __FILE__, __LINE__ , __VA_ARGS__)
-	#define LOG_FORMAT_INFO(TXT_FMT, ...) printf("%s (%d) INFO: " TXT_FMT "\n",, __FILE__, __LINE__ , __VA_ARGS__)
+	#define LOG_FORMAT_INFO(TXT_FMT, ...) printf("%s (%d) INFO: " TXT_FMT "\n", __FILE__, __LINE__ , __VA_ARGS__)
 	#define LOG_FORMAT_WARNING(TXT_FMT, ...) printf("%s (%d) WARNING: " TXT_FMT "\n", __FILE__, __LINE__ , __VA_ARGS__)
 #endif
 

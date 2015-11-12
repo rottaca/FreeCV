@@ -46,7 +46,7 @@ void Image::initEmpty()
 	m_data = NULL;
 	m_ownMem = false;
 	m_format = PF_GRAYSCALE_8;
-	m_channels = 0;
+	m_bytesPerPixel = 0;
 }
 bool Image::init(int width, int height, PixelFormat f, unsigned char* data, bool copyData)
 {
@@ -63,19 +63,19 @@ bool Image::init(int width, int height, PixelFormat f, unsigned char* data, bool
 	switch (f) {
 	case PF_GRAYSCALE_8:
 		buffSize = width * height;
-		m_channels = 1;
+		m_bytesPerPixel = 1;
 		break;
 	case PF_RGB_888:
 		buffSize = width * height * 3;
-		m_channels = 3;
+		m_bytesPerPixel = 3;
 		break;
 	case PF_FLOAT_32:
 		buffSize = width * height * sizeof(float);
-		m_channels = sizeof(float);
+		m_bytesPerPixel = sizeof(float);
 		break;
 	case PF_YUYV:
 		buffSize = width * height * 2;
-		m_channels = 3;
+		m_bytesPerPixel = 2;
 		break;
 	default:
 		initEmpty();

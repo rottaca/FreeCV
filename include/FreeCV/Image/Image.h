@@ -45,12 +45,12 @@ public:
 	template<typename T>
 	inline T* getPtr(int y) const {
 		assert(y < m_height && y >= 0);
-		return (T*)m_data + y * sizeof(T) * m_width * m_channels;
+		return (T*)(m_data + y * m_width * m_bytesPerPixel);
 	}
 	template<typename T>
 	inline T* getPtr(int y, int x) const {
 		assert(y < m_height && x < m_width && y >= 0 && x >= 0);
-		return (T*)m_data + y * sizeof(T) * m_width  * m_channels + x * sizeof(T) * m_channels;
+		return (T*)(m_data + y * m_width  * m_bytesPerPixel + x * m_bytesPerPixel);
 	}
 	template<typename T>
 	T& at(int y, int x) {
@@ -113,7 +113,7 @@ public:
 	void initEmpty();
 
 private:
-	int m_width, m_height, m_channels;
+	int m_width, m_height, m_bytesPerPixel;
 	bool m_ownMem;
 	unsigned char* m_data;
 	PixelFormat m_format;

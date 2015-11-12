@@ -9,6 +9,7 @@
 #define FREECV_H_
 
 #include "FreeCV/Core/Logger.h"
+#include "FreeCV/Core/StopWatch.h"
 #include "FreeCV/Core/Macros.h"
 #include "FreeCV/Core/Matrix.h"
 #include "FreeCV/Core/Vector.h"
@@ -23,6 +24,7 @@
 
 #include "FreeCV/Stereo/SGM.h"
 #include "FreeCV/Stereo/PointCloudCreator.h"
+#include "FreeCV/Stereo/UndistortAndRectify.h"
 
 #include "FreeCV/IO/VideoCapture.h"
 #endif /* FREECV_H_ */

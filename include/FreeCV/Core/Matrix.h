@@ -25,11 +25,16 @@ class Matrix {
 
 public:
 	Matrix(size_t rows, size_t cols, T* data = NULL) {
-		m = NULL;
+		initEmpty();
 		init(rows, cols, data);
 	}
+
+	Matrix() {
+		initEmpty();
+		init(0, 0);
+	}
 	Matrix(const Matrix<T, COMPILE_ROWS, COMPILE_COLS>& m2) {
-		m = NULL;
+		initEmpty();
 		init(m2.getRows(), m2.getCols(), m2.getPtr());
 	}
 
@@ -37,17 +42,29 @@ public:
 		if (m != NULL)
 			delete[] m;
 	}
+	void initEmpty(){
+		m = NULL;
+		cols = 0;
+		rows = 0;
+	}
+
 	void init(size_t rows, size_t cols, void* data = NULL) {
-		if (m != NULL)
+		if (m != NULL){
 			delete[] m;
+			m = NULL;
+		}
 
 		if(COMPILE_ROWS != FCV_DYNAMIC_SIZE)
 			rows = COMPILE_ROWS;
 		if(COMPILE_COLS != FCV_DYNAMIC_SIZE)
 			cols = COMPILE_COLS;
 
+		if(cols == 0 || rows == 0)
+			return;
+
 		this->cols = cols;
 		this->rows = rows;
+
 		m = new T[rows * cols];
 
 		if (data != NULL)
@@ -61,15 +78,15 @@ public:
 	}
 	inline T* getPtr(int y) const {
 		assert(y < rows && y>=0);
-		return m + y * rows;
+		return &m[y * cols];
 	}
 	inline T* getPtr(int y, int x) const {
 		assert(y < rows && x < cols && y >= 0 && x >= 0);
-		return m + y * rows + x;
+		return &m[y * cols + x];
 	}
 	T& at(int y, int x) {
 		assert(y < rows && x < cols && y >= 0 && x >= 0);
-		return *getPtr(y, x);
+		return m[y * cols + x];
 	}
 
 	size_t getCols() const {
@@ -79,9 +96,11 @@ public:
 		return rows;
 	}
 
+
+
 	std::string toString() const {
 		std::stringstream s;
-		s << "Mat (Type ";
+		s << "Matrix (Type ";
 		if (typeid(T) == typeid(double))
 			s << "double";
 		else if (typeid(T) == typeid(float))
@@ -95,21 +114,64 @@ public:
 
 		s << ", Size " << rows << " Rows x " << cols << " Cols): \n";
 
-		T* mPtr = m;
-		for (int r = 0; r < rows - 1; r++) {
+		if(m == 0)
+		{
+			s << "NOT INITIALIZED";
+		}
+		else{
+			T* mPtr = m;
+			for (int r = 0; r < rows - 1; r++) {
+				for (int c = 0; c < cols - 1; c++) {
+					s << *mPtr++ << ", ";
+				}
+				s << *mPtr++ << "\n";
+			}
+
 			for (int c = 0; c < cols - 1; c++) {
 				s << *mPtr++ << ", ";
 			}
-			s << *mPtr++ << "\n";
+			s << *mPtr++;
 		}
-
-		for (int c = 0; c < cols - 1; c++) {
-			s << *mPtr++ << ", ";
-		}
-		s << *mPtr++;
-
 		return s.str();
 	}
+
+	T det() {
+		assert(rows == cols);
+		if (rows == 2) {
+			return at(0, 0) * at(1, 1) - at(1, 0) * at(0, 1);
+		} else if (rows == 3) {
+			return at(0, 0) *(at(1,1)*at(2,2) - at(1,2)*at(2,1))
+				 - at(0, 1) *(at(1,0)*at(2,2) - at(1,2)*at(2,0))
+				 + at(0, 2) *(at(1,0)*at(2,1) - at(1,1)*at(2,0));
+		} else {
+			// TODO not implemented!
+			return 0;
+		}
+
+	}
+
+	Matrix<T,COMPILE_ROWS, COMPILE_COLS> inverse(){
+		Matrix<T,COMPILE_ROWS, COMPILE_COLS> inv;
+		assert(rows == cols);
+		if(rows == 2){
+
+		}else if(rows == 3){
+
+		}else{
+			LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
+		}
+
+		return inv;
+	}
+
+	void setIdentity(){
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < cols; x++) {
+				at(y,x) = (int)(x == y);
+			}
+		}
+	}
+
 	////////////////////////////////////////
 	// Operator overloading
 	////////////////////////////////////////
@@ -130,13 +192,16 @@ public:
 		return nv;
 	}
 	// TODO
-//	Matrix<T, COLS, ROWS> operator*(Matrix<T, ROWS, COLS> v2) {
-//		Matrix<T, COLS, ROWS> nv(*this);
-//		for (int i = 0; i < S; i++) {
-//			nv[i] *= s;
-//		}
-//		return nv;
-//	}
+	Matrix<T, COMPILE_COLS, COMPILE_ROWS> operator*(Matrix<T, COMPILE_COLS, COMPILE_ROWS> m2) {
+		Matrix<T, COMPILE_ROWS, COMPILE_ROWS> nv(rows, m2.getCols());
+		for (int y = 0; y < rows; y++)
+			for (int x = 0; x < m2.getCols(); x++) {
+				nv.at(y,x) = 0;
+				for (int i = 0; i < cols; i++)
+					nv.at(y,x) += at(y,i) * m2.at(i,x);
+			}
+		return nv;
+	}
 
 private:
 	size_t cols, rows;

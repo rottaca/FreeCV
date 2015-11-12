@@ -23,12 +23,15 @@ SET(SOURCE_FILES
     src/VideoCapture.cpp
     src/ColorConvert.cpp
     src/PointCloudCreator.cpp
+    src/UndistortAndRectify.cpp
+    src/CalibLoader.cpp
 )
 
 SET(HEADER_FILES
     include/FreeCV/FreeCV.h
     
     include/FreeCV/Core/Logger.h
+    include/FreeCV/Core/StopWatch.h
     include/FreeCV/Core/Macros.h
     include/FreeCV/Core/Matrix.h
     include/FreeCV/Core/Vector.h
@@ -43,6 +46,8 @@ SET(HEADER_FILES
     
     include/FreeCV/Stereo/SGM.h
     include/FreeCV/Stereo/PointCloudCreator.h
+    include/FreeCV/Stereo/UndistortAndRectify.h
+    include/FreeCV/Stereo/CalibLoader.h
     
     include/FreeCV/IO/VideoCapture.h
 )

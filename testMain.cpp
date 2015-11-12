@@ -33,7 +33,18 @@ int main(int argc, char **argv) {
 //	fcv::Vectori histCum = fcv::calcHistCum(hist);
 //	fcv::Image histImgCum = fcv::convertHistToImage(&histCum);
 //	fcv::ImageFileManager::saveImage(&histImgCum,"histCum.pgm");
-//
+
+//	fcv::Matrixf m(4,2),m2(2,3), m3;
+//	m.setIdentity();
+//	m.at(0,0) = 5;
+//	m2.setIdentity();
+//	std::cout <<m.toString()<< std::endl;
+//	std::cout <<m2.toString()<< std::endl;
+
+//	m3 = m*m2;
+//	std::cout << m3.toString() << std::endl;
+
+
 //	fcv::filterGauss(&img3,&img3,3);
 ////	fcv::applyKernel(&img3,&img3,kernel,16);
 //	fcv::equalizeHistogram(&img3,&img3);
@@ -69,21 +80,21 @@ int main(int argc, char **argv) {
 	fcv::Image imgDispL(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
 	fcv::Image imgDispR(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
 
-	clock_t time = clock();
+	{
+		fcv::StopWatch sw("SGM processing");
+		sgm.processImagePair(&imgL, &imgR);
+		memcpy(imgDispL.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
 
-	sgm.processImagePair(&imgL, &imgR);
-	memcpy(imgDispL.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
-
-	sgm.processImagePair(&imgL, &imgR, false);
-	memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
-
-	std::cout << (float) (clock() - time) * 1000 / CLOCKS_PER_SEC << " ms" << std::endl;
-
-	fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
-
-	fcv::PointCloudCreator::PointCloud points;
-	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
-	fcv::PointCloudCreator::saveToPly("data.ply", &points);
+//		sgm.processImagePair(&imgL, &imgR, false);
+//		memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
+//		{
+//			fcv::StopWatch sw("L2R Consistency Check");
+//			fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
+//		}
+	}
+//	fcv::PointCloudCreator::PointCloud points;
+//	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
+//	fcv::PointCloudCreator::saveToPly("data.ply", &points);
 //
 	fcv::Image imgDispColor;
 //	fcv::convertPxFormat(&imgDispL, &imgDisp8Bit, fcv::FLOAT_TO_GRAY);
@@ -93,10 +104,13 @@ int main(int argc, char **argv) {
 	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",
 			fcv::ImageFileManager::PPM_BINARY);
 
-	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
+	fcv::ImageFileManager::saveImage(&imgDispL, "disparityL.pgm",
+			fcv::ImageFileManager::PGM_BINARY);
 
-	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
-			fcv::ImageFileManager::PPM_BINARY);
+//	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
+//
+//	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
+//			fcv::ImageFileManager::PPM_BINARY);
 
 
 //	fcv::PointCloudCreator::PointCloud points;
