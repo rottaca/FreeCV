@@ -12,6 +12,7 @@
 #include "sstream"
 #include <typeinfo>
 #include "assert.h"
+#include <algorithm>
 
 #include "FreeCV/Core/Logger.h"
 #include "FreeCV/Core/Macros.h"
@@ -21,6 +22,10 @@ namespace fcv {
 template<typename T, size_t COMPILE_SIZE>
 class Vector {
 public:
+	/**
+	 * Creates a vector with the specified size.
+	 * Attention: Parameter will be ignored if vector is a fixed size type.
+	 */
 	Vector(size_t elemCnt){
 		v = NULL;
 		init(elemCnt);
@@ -30,6 +35,9 @@ public:
 		cnt = 0;
 		init(0);
 	}
+	/**
+	 * Copy constructor
+	 */
 	Vector(const Vector<T, COMPILE_SIZE>& v2){
 		v = NULL;
 		init(v2.getSize(),v2.v);
@@ -38,6 +46,11 @@ public:
 		if(v != NULL)
 			delete[] v;
 	}
+	/**
+	 * Initializes the matrix with the specified size an copy the optional data into it.
+	 * Attention: Size will be ignored if vector is a fixed size type.
+	 * Attention: Data should have the correct size (elemCnt*sizeof(T))
+	 */
 	void init(size_t elemCnt, void* data = NULL){
 		if(v != NULL)
 			delete[] v;
@@ -63,16 +76,24 @@ public:
 	}
 
 	/**
-	 * Returns Pointer to the VectorData
+	 * Returns Pointer to the first entry in the vector
 	 */
 	T* getPtr()const  {return v;}
-	// Set Vector Component
+	/**
+	 * Set Vector Component
+	 */
 	void set(int i, T val) {assert(i< cnt);v[i] = val;}
-	// Get Vector Component
+	/**
+	 * Get Vector Component
+	 */
 	T get(int i)const  {assert(i< cnt);return v[i];}
-	// Get Vector Component Cnt
+	/**
+	 * Returns vector component count
+	 */
 	size_t getSize()const {return cnt;}
-
+	/**
+	 * Formats the vector as string
+	 */
     std::string toString() const
     {
     	std::stringstream s;
@@ -97,22 +118,17 @@ public:
 
     	return s.str();
     }
-
+    /**
+     * Returns the maximum value in the vector
+     */
 	T getMax() {
-		T max = v[0];
-		for (int i = 0; i < cnt; i++)
-			if (v[i] > max)
-				max = v[i];
-
-		return max;
+		return *std::max_element(v, v+cnt);
 	}
+    /**
+     * Returns the minimum value in the vector
+     */
 	T getMin() {
-		T min = v[0];
-		for (int i = 0; i < cnt; i++)
-			if (v[i] < min)
-				min = v[i];
-
-		return min;
+		return *std::min_element(v, v+cnt);
 	}
 
 
@@ -149,14 +165,32 @@ public:
     	return nv;
     }
 
-//    Vector<T,S> operator*(Vector<T,S> v2)
-//    {
-//    	Vector<T,S> nv(*this);
-//    	for(int i = 0; i < S;i++){
-//    		nv[i] *= s;
-//    	}
-//    	return nv;
-//    }
+    /**
+     * Scalar product
+     */
+    T operator*(Vector<T,COMPILE_SIZE> v2)
+    {
+    	assert(v2.getSize() == getSize());
+    	T val = 0;
+    	for(int i = 0; i < getSize();i++){
+    		val += get(i)*v2.get(i);
+    	}
+    	return val;
+    }
+
+    /**
+     * Scalar product
+     */
+    T dot(Vector<T,COMPILE_SIZE> v2)
+    {
+    	return operator *(v2);
+    }
+
+    Vector<T,COMPILE_SIZE> cross(Vector<T,COMPILE_SIZE> v2){
+    	 Vector<T,COMPILE_SIZE> vn;
+    	 LOG_ERROR("Cross product not implemented yet!");
+    	return vn;
+    }
 
 
 private:

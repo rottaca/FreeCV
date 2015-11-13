@@ -36,7 +36,7 @@ public:
 		m_penalty2 = p2;
 	}
 
-	double calcExpectedMemoryUsage(){
+	long calcExpectedMemoryUsage(){
 		return m_dataSize*sizeof(unsigned short)*3 + m_width*m_height*sizeof(float);
 	}
 
@@ -55,14 +55,14 @@ private:
 	void initAggregateCostDir(Path p);
 	inline void evaluatePath(unsigned short* priorAccPtr, unsigned short* currCostPtr, unsigned short* currentAccPtr);
 
-
 private:
 	unsigned short* m_CostData;
 	float* m_disparityMap;
 	unsigned short* m_aggregatedCosts;
 	unsigned short* m_aggregatedCostsDir;
 
-	int m_width,m_height, m_maxDisp, m_dataSize, m_buffSize;
+	int m_width,m_height, m_maxDisp;
+	size_t m_dataSize, m_buffSize;
 	unsigned short m_penalty1, m_penalty2;
 	bool m_isInitialized;
 	std::vector<Path> m_paths;

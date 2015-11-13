@@ -68,14 +68,14 @@ int main(int argc, char **argv) {
 
 	sgm.init(imgL.getWidth(), imgL.getHeight(), 60);
 	sgm.updatePenalties(25, 250);
-	double memUsage = sgm.calcExpectedMemoryUsage();
+	long memUsage = sgm.calcExpectedMemoryUsage();
 
 	std::cout << "Expected Memory Usage: " << memUsage / (1024*1024) << " MegaByte" << std::endl;
 
 	fcv::Vector2f c;
 	c[0] = imgL.getWidth()/2;
 	c[1] = imgL.getHeight()/2;
-	pcc.init(c,150,0.17);
+	pcc.init(c,5299,0.117);
 
 	fcv::Image imgDispL(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
 	fcv::Image imgDispR(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
@@ -102,13 +102,11 @@ int main(int argc, char **argv) {
 	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",
 			fcv::ImageFileManager::PPM_BINARY);
 
-	fcv::ImageFileManager::saveImage(&imgDispL, "disparityL.pgm",
-			fcv::ImageFileManager::PGM_BINARY);
 
-//	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
-//
-//	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
-//			fcv::ImageFileManager::PPM_BINARY);
+	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
+
+	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
+			fcv::ImageFileManager::PPM_BINARY);
 
 
 //	fcv::PointCloudCreator::PointCloud points;

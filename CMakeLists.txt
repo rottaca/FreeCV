@@ -88,6 +88,8 @@ file(GLOB files_needed
     TestData/stereo_left_rgb.ppm
     TestData/stereo_right_rgb.ppm
 )
+
+message(STATUS "Copy test data to binariy dir...")
 file(COPY ${files_needed} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 

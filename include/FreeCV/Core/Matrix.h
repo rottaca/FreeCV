@@ -24,6 +24,11 @@ template<typename T, size_t COMPILE_ROWS, size_t COMPILE_COLS >
 class Matrix {
 
 public:
+	/**
+	 * Creates a matrix with the specified size and copy the optional data into it.
+	 * Attention: matrix size is ignored if matrix is a fixed size type.
+	 * Attention: Data array should have the correct size (rows*cols*sizeof(T))
+	 */
 	Matrix(size_t rows, size_t cols, T* data = NULL) {
 		initEmpty();
 		init(rows, cols, data);
@@ -33,6 +38,9 @@ public:
 		initEmpty();
 		init(0, 0);
 	}
+	/**
+	 * Copy Constructor
+	 */
 	Matrix(const Matrix<T, COMPILE_ROWS, COMPILE_COLS>& m2) {
 		initEmpty();
 		init(m2.getRows(), m2.getCols(), m2.getPtr());
@@ -42,12 +50,11 @@ public:
 		if (m != NULL)
 			delete[] m;
 	}
-	void initEmpty(){
-		m = NULL;
-		cols = 0;
-		rows = 0;
-	}
 
+	/**
+	 * Initializes the Matrix with a given size and optional data.
+	 * Size changes are ignored if matrix has a fixed size.
+	 */
 	void init(size_t rows, size_t cols, void* data = NULL) {
 		if (m != NULL){
 			delete[] m;
@@ -73,31 +80,52 @@ public:
 			memset(m, 0, cols * rows * sizeof(T));
 	}
 
+	/**
+	 * Returns a pointer to the first entry.
+	 */
 	inline T* getPtr() const {
 		return m;
 	}
+	/**
+	 * Returns a pointer to the first entry of the specified row.
+	 */
 	inline T* getPtr(int y) const {
 		assert(y < rows && y>=0);
 		return &m[y * cols];
 	}
+	/**
+	 * Returns a pointer to the specified matrix entry.
+	 */
 	inline T* getPtr(int y, int x) const {
 		assert(y < rows && x < cols && y >= 0 && x >= 0);
 		return &m[y * cols + x];
 	}
+	/**
+	 * Returns a reference to the specified matrix entry.
+	 * Attention no range check!
+	 */
 	T& at(int y, int x) {
 		assert(y < rows && x < cols && y >= 0 && x >= 0);
 		return m[y * cols + x];
 	}
 
+	/**
+	 * Returns column count
+	 */
 	size_t getCols() const {
 		return cols;
 	}
+	/**
+	 * Returns row count
+	 */
 	size_t getRows() const {
 		return rows;
 	}
 
 
-
+	/**
+	 * Formats the matrix as string.
+	 */
 	std::string toString() const {
 		std::stringstream s;
 		s << "Matrix (Type ";
@@ -135,6 +163,10 @@ public:
 		return s.str();
 	}
 
+	/**
+	 * Calculates the determinant of the matrix.
+	 * Currently only implemented for 2x2 and 3x3 Matrices.
+	 */
 	T det() {
 		assert(rows == cols);
 		if (rows == 2) {
@@ -152,6 +184,8 @@ public:
 
 	Matrix<T,COMPILE_ROWS, COMPILE_COLS> inverse(){
 		Matrix<T,COMPILE_ROWS, COMPILE_COLS> inv;
+		LOG_ERROR("Inverse Matrix not implemented yet!");
+		return inv;
 		assert(rows == cols);
 		if(rows == 2){
 
@@ -170,6 +204,14 @@ public:
 				at(y,x) = (int)(x == y);
 			}
 		}
+	}
+
+	bool isEmpty(){
+		for (int i = 0; i < rows*cols; i++) {
+			if(m[i] != 0)
+				return false;
+		}
+		return true;
 	}
 
 	////////////////////////////////////////
@@ -191,6 +233,7 @@ public:
 		}
 		return nv;
 	}
+
 	// TODO
 	Matrix<T, COMPILE_COLS, COMPILE_ROWS> operator*(Matrix<T, COMPILE_COLS, COMPILE_ROWS> m2) {
 		Matrix<T, COMPILE_ROWS, COMPILE_ROWS> nv(rows, m2.getCols());
@@ -202,7 +245,15 @@ public:
 			}
 		return nv;
 	}
-
+private:
+	/**
+	 * Initializes the matrix as empty matrix.
+	 */
+	void initEmpty(){
+		m = NULL;
+		cols = 0;
+		rows = 0;
+	}
 private:
 	size_t cols, rows;
 	// Contains Matrix Data

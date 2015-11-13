@@ -24,9 +24,13 @@ public:
 		m_endTime = -1;
 		m_isRunning = false;
 
-		if (true)
-			start();
+		start();
 	}
+	/**
+	 * Creates a stopwatch with the specified name.
+	 * @param autoStart: Starts the stop watch after construction
+	 * @param logOnDestroy: Prints a log message with the elapsed time when the object will be destroyed
+	 */
 	StopWatch(std::string name, bool autoStart = true, bool logOnDestroy = true)
 	{
 		m_name = name;

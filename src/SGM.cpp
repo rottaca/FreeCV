@@ -84,7 +84,6 @@ bool SGM::init(int width, int height, int maxDisp){
 void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 {
 
-#pragma omp parallel for
 	for (int y = 0; y < m_height; y++) {
 		unsigned short* costPtr = m_CostData + m_width*m_maxDisp*y;
 		unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
@@ -128,8 +127,8 @@ void SGM::aggregateCost(){
 	idxTopRight = (m_width-1) * m_maxDisp,
 	idxBottomLeft = (m_height-1)*m_width*m_maxDisp,
 	idxBottomRight = ((m_height-1)*m_width + m_width-1)*m_maxDisp,
-	addOneRow = m_maxDisp,
-	addOneColumn = m_width*m_maxDisp,
+	addOneX = m_maxDisp,
+	addOneY = m_width*m_maxDisp,
 	offs;
 
 	// Reset memory of aggreated costs
@@ -142,10 +141,12 @@ void SGM::aggregateCost(){
 //#ifndef NDEBUG
 		cout << "Aggregate Path: " << path.x << " " << path.y << endl;
 //#endif
+
+		StopWatch sw("Aggregate Path");
 		// Check which side of the image is the start and init the whole image border on that side
 		initAggregateCostDir(path);
 		// Offset to next pixel
-		offs = path.y*addOneColumn + path.x*addOneRow;
+		offs = path.y*addOneY + path.x*addOneX;
 
 		// from right to left
 		if(path.x < 0)
@@ -153,23 +154,22 @@ void SGM::aggregateCost(){
 			// Accumulate costs
 			// Go from right to left on each line
 
-//#ifndef NDEBUG
 		cout << "Aggregate -X-Dir" << endl;
-//#endif
 
+#pragma omp parallel for
 			for(int y = 0; y  < m_height; y++){
 				unsigned short* costPtr;
 				unsigned short* aggrcostPtrDirPrev;
 				unsigned short* aggrcostPtrDir;
 				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight + y*addOneColumn;
+				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight - addOneX + y*addOneY;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData  + idxTopRight + y*addOneColumn;
+				costPtr = m_CostData  + idxTopRight + y*addOneY;
 
 
 //				cout << "loop: " << y << endl;
 				// Pointer still in image?
-				xCurr = m_width-1;
+				xCurr = m_width-2;
 				yCurr = y;
 				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
 
@@ -198,15 +198,15 @@ void SGM::aggregateCost(){
 				unsigned short* aggrcostPtrDirPrev;
 				unsigned short* aggrcostPtrDir;
 				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft + y*addOneColumn;
+				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft +addOneX + y*addOneY;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData  + idxTopLeft + y*addOneColumn;
+				costPtr = m_CostData  + idxTopLeft + y*addOneY;
 
 				if(aggrcostPtrDirPrev < m_aggregatedCostsDir)
 					continue;
 
 				// Pointer still in image?
-				xCurr = 0;
+				xCurr = 1;
 				yCurr = y;
 				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
 
@@ -236,13 +236,13 @@ void SGM::aggregateCost(){
 				unsigned short* aggrcostPtrDirPrev;
 				unsigned short* aggrcostPtrDir;
 				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft + x*addOneRow;
+				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft - addOneY + x*addOneX;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData + idxBottomLeft  + x*addOneRow;
+				costPtr = m_CostData + idxBottomLeft  + x*addOneX;
 
 				// Pointer still in image?
 				xCurr = x;
-				yCurr = m_height-1;
+				yCurr = m_height-2;
 				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
 
 					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
@@ -270,9 +270,9 @@ void SGM::aggregateCost(){
 				unsigned short* aggrcostPtrDirPrev;
 				unsigned short* aggrcostPtrDir;
 				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneRow + addOneColumn;
+				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneX + addOneY;
 				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData + x*addOneRow + addOneColumn;
+				costPtr = m_CostData + x*addOneX + addOneY;
 
 				if (aggrcostPtrDirPrev < m_aggregatedCostsDir)
 					continue;
@@ -399,7 +399,7 @@ inline void SGM::evaluatePath(unsigned short* priorAccPtr, unsigned short* currC
 void SGM::computeDisparityMap()
 {
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < m_height * m_width; i++) {
 
 		unsigned short* aggCostPtr = m_aggregatedCosts + m_maxDisp*i;
