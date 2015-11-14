@@ -14,6 +14,7 @@ namespace fcv {
 bool convertGRAY_RGB(Image* input, Image* output);
 bool convertRGB_GRAY(Image* input, Image* output);
 bool convertYUYV_RGB(Image* input, Image* output);
+bool convertYUYV_GRAY(Image* input, Image* output);
 bool convertFLOAT_GRAY(Image* input, Image* output);
 bool convertGRAY_FLOAT(Image* input, Image* output);
 
@@ -26,6 +27,9 @@ bool convertPxFormat(Image* input, Image* output, PixelFormatConvert mode) {
 		return convertRGB_GRAY(input, output);
 		break;
 	case YUYV_TO_RGB_888:
+		return convertYUYV_RGB(input, output);
+		break;
+	case YUYV_TO_GRAY:
 		return convertYUYV_RGB(input, output);
 		break;
 	case FLOAT_TO_GRAY:
@@ -334,6 +338,35 @@ bool convertYUYV_RGB(Image* input, Image* output) {
 		*outputPtr++ = CLIP(y2 + 45 * v / 32);
 		*outputPtr++ = CLIP(y2 - (11 * u + 23 * v) / 32);
 		*outputPtr++ = CLIP(y2 + 113 * u / 64);
+	}
+	return true;
+}
+bool convertYUYV_GRAY(Image* input, Image* output) {
+	output->init(input->getWidth(), input->getHeight(), Image::PF_GRAYSCALE_8);
+
+	unsigned char* inputPtr = input->getPtr<unsigned char>();
+	unsigned char* outputPtr = output->getPtr<unsigned char>();
+
+	for (int i = 0; i < input->getWidth() * input->getHeight(); i += 2) {
+		int u, v, y1, y2;
+
+		y1 = *inputPtr++;
+		u = *inputPtr++;
+		y2 = *inputPtr++;
+		v = *inputPtr++;
+
+		// Integer operation of ITU-R standard for YCbCr is (from Wikipedia)
+		// https://en.wikipedia.org/wiki/YUV#Y.27UV422_to_RGB888_conversion
+		u = u - 128;
+		v = v - 128;
+
+		*outputPtr++ = y1;
+		*outputPtr++ = y1;
+		*outputPtr++ = y1;
+
+		*outputPtr++ = y2;
+		*outputPtr++ = y2;
+		*outputPtr++ = y2;
 	}
 	return true;
 }

@@ -12,7 +12,7 @@
 namespace fcv {
 
 typedef enum {
-	GRAY8_TO_RGB_888, RGB_888_TO_GRAY8, YUYV_TO_RGB_888, FLOAT_TO_GRAY, GRAY_TO_FLOAT
+	GRAY8_TO_RGB_888, RGB_888_TO_GRAY8, YUYV_TO_RGB_888, YUYV_TO_GRAY, FLOAT_TO_GRAY, GRAY_TO_FLOAT
 } PixelFormatConvert;
 
 bool convertPxFormat(Image* input, Image* output, PixelFormatConvert mode);

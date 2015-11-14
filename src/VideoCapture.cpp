@@ -33,7 +33,11 @@ VideoCapture::VideoCapture() {
 	n_buffers = 0;
 }
 VideoCapture::~VideoCapture() {
-
+	if(isCaptureing)
+	{
+		stopCapture();
+		closeDev();
+	}
 }
 vector<VideoCapture::CaptureDeviceInfo> VideoCapture::enumDevices() {
 	vector<VideoCapture::CaptureDeviceInfo> devInfo;
@@ -241,9 +245,10 @@ bool VideoCapture::startCapture() {
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (-1 == xioctl(devFd, VIDIOC_STREAMON, &type)) {
 		perror("Start Capture");
+		LOG_DEBUG("Can't start capture.");
 		return false;
 	}
-
+	LOG_DEBUG("Capture started.");
 	isCaptureing = true;
 	return true;
 }
@@ -254,8 +259,10 @@ bool VideoCapture::stopCapture() {
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (-1 == xioctl(devFd, VIDIOC_STREAMOFF, &type)){
 		perror("VIDIOC_STREAMOFF");
+		LOG_DEBUG("Can't stop capture.");
 		return false;
 	}
+	LOG_DEBUG("Capture stopped.");
 	isCaptureing = false;
 	return true;
 
@@ -303,9 +310,7 @@ bool VideoCapture::grabFrame(Image* frame) {
 	}
 
 	// Init Image
-	frame->init(format.width,format.height,fcvFormat);
-
-	memcpy(frame->getPtr<unsigned char>(),buffers[buf.index].start,buffers[buf.index].length);
+	frame->init(format.width,format.height,fcvFormat,(unsigned char*)buffers[buf.index].start,true);
 	return true;
 }
 void VideoCapture::printCaps()

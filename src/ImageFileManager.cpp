@@ -240,7 +240,7 @@ bool ImageFileManager::saveImage(Image* image, std::string fileName,
 
 			break;
 		default:
-			LOG_ERROR("Invalid File format specifed!");
+			LOG_ERROR("Invalid File format specified! Can't save file!");
 			return false;
 		}
 
@@ -280,7 +280,7 @@ bool ImageFileManager::saveImage(Image* image, std::string fileName,
 
 			break;
 		default:
-			LOG_ERROR("Invalid File format specifed!");
+			LOG_ERROR("Invalid File format specified! Can't save file!");
 			return false;
 		}
 		break;
@@ -335,13 +335,13 @@ bool ImageFileManager::saveImage(Image* image, std::string fileName,
 
 			break;
 		default:
-			LOG_ERROR("Invalid File format specifed!");
+			LOG_ERROR("Invalid File format specified! Can't save file!");
 			return false;
 		}
 		break;
 	}
 	default:
-		LOG_ERROR("Invalid pixel format specifed!");
+		LOG_ERROR("Invalid pixel format specified! Only RGB, Float and Grayscale supported! Can't save file!");
 		return false;
 		break;
 	}

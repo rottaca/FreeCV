@@ -35,6 +35,19 @@ Image::Image(int width, int height, PixelFormat f, unsigned char* data, bool cop
 	initEmpty();
 	init(width,height,f,data,copyData);
 }
+Image::Image(Rectangle roi, Image* orgImg)
+{
+	initEmpty();
+	crop(roi, orgImg);
+}
+Image& Image::operator=(const Image& img)
+{
+	releaseData();
+	if(img.isValid())
+		init(img.getWidth(),img.getHeight(),img.getFormat(),img.getPtr<unsigned char>(),true);
+
+	return *this;
+}
 
 Image::~Image() {
 	releaseData();
@@ -105,6 +118,47 @@ void Image::releaseData(){
 		m_data = NULL;
 		m_ownMem = false;
 	}
+}
+void Image::crop(Rectangle roi, Image* orgImg) {
+
+	// Crop from own image
+	if (orgImg == NULL && isValid()) {
+		assert(roi.getTop() >= 0 && roi.getBottom() <= getHeight()
+				&& roi.getLeft() >= 0 && roi.getRight() <= getWidth());
+		// Temp buffer
+		unsigned char* newBuff = new unsigned char[(int)(roi.getWidth()	* roi.getHeight() * getBytesPerPixel())];
+		unsigned char* newBuffPtr = newBuff;
+
+		LOG_DEBUG("Crop from own buffer");
+		for (int h = roi.getTop(); h < roi.getBottom(); h++) {
+			memcpy(newBuffPtr, getPtr<unsigned char>(h,roi.getLeft()),
+					getBytesPerPixel() * roi.getWidth());
+
+			newBuffPtr += (int)(getBytesPerPixel() * roi.getWidth());
+		}
+		if (m_ownMem)
+			releaseData();
+
+		m_data = newBuff;
+		m_ownMem = true;
+		m_width = roi.getWidth();
+		m_height = roi.getHeight();
+
+	}
+	// Crop from other image
+	else if(orgImg != NULL){
+		assert(	roi.getTop() >= 0 && roi.getBottom() <= orgImg->getHeight()
+				&& roi.getLeft() >= 0
+				&& roi.getRight() <= orgImg->getWidth());
+
+		init(roi.getWidth(), roi.getHeight(), orgImg->getFormat());
+		for (int h = roi.getTop(); h < roi.getBottom(); h++) {
+			memcpy(getPtr<unsigned char>(h), orgImg->getPtr<unsigned char>(h,roi.getLeft()),	orgImg->getBytesPerPixel() * roi.getWidth());
+		}
+	}else{
+		LOG_ERROR("Can't crop from my own buffer. Not initialized!");
+	}
+
 }
 //Image& Image::operator= (const Image& other){
 //    if (this != &other) {

@@ -15,6 +15,10 @@ Rectangle::Rectangle(float x, float y, float width, float height){
 	this->width = width;
 	this->height = height;
 }
+Rectangle::Rectangle(){
+	this->width = 0;
+	this->height = 0;
+}
 
 Rectangle::~Rectangle() {
 

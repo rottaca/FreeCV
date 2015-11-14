@@ -14,6 +14,7 @@
 #include "assert.h"
 
 #include "FreeCV/Core/Logger.h"
+#include "FreeCV/Core/Rectangle.h"
 
 namespace fcv {
 
@@ -29,6 +30,8 @@ public:
 	Image(int width, int height, PixelFormat f);
 	Image(int width, int height, PixelFormat f, unsigned char* data,
 			bool copyData);
+	Image(Rectangle roi, Image* orgImg);
+
 	virtual ~Image();
 
 	Image clone() {
@@ -58,7 +61,7 @@ public:
 		return *getPtr<T>(y, x);
 	}
 
-//	Image& operator=(const Image& img);
+	Image& operator=(const Image& img);
 
 	int getWidth() const {
 		return m_width;
@@ -66,6 +69,9 @@ public:
 	;
 	int getHeight() const {
 		return m_height;
+	}
+	int getBytesPerPixel() const {
+		return m_bytesPerPixel;
 	}
 	;
 	PixelFormat getFormat() const {
@@ -111,6 +117,8 @@ public:
 			bool copyData = false);
 
 	void initEmpty();
+
+	void crop(Rectangle roi, Image* orgImg = NULL);
 
 private:
 	int m_width, m_height, m_bytesPerPixel;

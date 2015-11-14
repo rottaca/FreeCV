@@ -120,6 +120,8 @@ void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 //		*costPtr++ = *costPtr * 2047 / max;
 
 }
+
+// TODO REWRITE
 void SGM::aggregateCost(){
 
 
@@ -156,7 +158,7 @@ void SGM::aggregateCost(){
 
 		cout << "Aggregate -X-Dir" << endl;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 			for(int y = 0; y  < m_height; y++){
 				unsigned short* costPtr;
 				unsigned short* aggrcostPtrDirPrev;
@@ -171,7 +173,9 @@ void SGM::aggregateCost(){
 				// Pointer still in image?
 				xCurr = m_width-2;
 				yCurr = y;
-				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
+				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height &&
+						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize &&
+						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
 
 
 //					cout << "x: "<< x << endl;
@@ -208,7 +212,9 @@ void SGM::aggregateCost(){
 				// Pointer still in image?
 				xCurr = 1;
 				yCurr = y;
-				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
+				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height &&
+						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize&&
+						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
 
 
 //					cout << "x: "<< x << endl;
@@ -243,7 +249,9 @@ void SGM::aggregateCost(){
 				// Pointer still in image?
 				xCurr = x;
 				yCurr = m_height-2;
-				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height){
+				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height&&
+						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize&&
+						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
 
 					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
 
@@ -281,7 +289,9 @@ void SGM::aggregateCost(){
 				xCurr = x;
 				yCurr = 1;
 				while(xCurr >= 0 && yCurr >= 0 &&
-						xCurr < m_width && yCurr < m_height){
+						xCurr < m_width && yCurr < m_height &&
+						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize&&
+						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
 
 
 					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);

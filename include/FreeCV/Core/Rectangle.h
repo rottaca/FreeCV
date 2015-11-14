@@ -12,6 +12,7 @@ namespace fcv {
 
 class Rectangle {
 public:
+	Rectangle();
 	Rectangle(float x, float y, float width, float height);
 	virtual ~Rectangle();
 
@@ -24,6 +25,10 @@ public:
 
 	float getWidth(){return width;}
 	float getHeight(){return height;}
+
+	bool isValid(){
+		return width != 0 && height != 0;
+	}
 
 private:
 	Vector2f leftTop;
