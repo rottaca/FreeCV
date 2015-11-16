@@ -33,8 +33,8 @@ public:
 
 	void printCaps();
 
-	bool setAutoexposureEnabled(bool enabled);
-	bool setExposureTime(int time_us);
+	bool setAutoexposureEnabled(bool enabled, bool dropFPS);
+	bool setExposureTime(unsigned int time_us);
 
 private:
 	struct buffer {

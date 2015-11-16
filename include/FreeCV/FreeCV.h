@@ -27,4 +27,5 @@
 #include "FreeCV/Stereo/UndistortAndRectify.h"
 
 #include "FreeCV/IO/VideoCapture.h"
+#include "FreeCV/IO/ExposureController.h"
 #endif /* FREECV_H_ */

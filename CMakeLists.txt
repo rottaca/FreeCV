@@ -25,6 +25,7 @@ SET(SOURCE_FILES
     src/PointCloudCreator.cpp
     src/UndistortAndRectify.cpp
     src/CalibLoader.cpp
+    src/ExposureController.cpp
 )
 
 SET(HEADER_FILES
@@ -50,6 +51,7 @@ SET(HEADER_FILES
     include/FreeCV/Stereo/CalibLoader.h
     
     include/FreeCV/IO/VideoCapture.h
+    include/FreeCV/IO/ExposureController.h
 )
 
 

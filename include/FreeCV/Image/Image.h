@@ -79,6 +79,10 @@ public:
 	}
 	;
 
+	size_t getBufferSize(){
+		return m_width*m_height*m_bytesPerPixel;
+	}
+
 	bool ownsMem() const {
 		return m_ownMem;
 	}

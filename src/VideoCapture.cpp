@@ -217,6 +217,9 @@ bool VideoCapture::openAndInitDev(string devStr, int reqWidth, int reqHeight) {
 	return true;
 }
 void VideoCapture::closeDev() {
+	if(isCaptureing)
+		stopCapture();
+
     for (int i = 0; i < n_buffers; ++i)
     	munmap(buffers[i].start, buffers[i].length);
 
@@ -283,16 +286,27 @@ bool VideoCapture::grabFrame(Image* frame) {
 	FD_ZERO(&fds);
 	FD_SET(devFd, &fds);
 	struct timeval tv = { 0 };
-	tv.tv_sec = 0;
-	tv.tv_usec = 100000;
-	int r = select(devFd + 1, &fds, NULL, NULL, &tv);
-	if (-1 == r) {
-		perror("Waiting for Frame");
-		return false;
+	int tries = 0;
+	int r =0;
+	while(tries < 10){
+		tries++;
+		tv.tv_sec = 0;
+		tv.tv_usec = 10000;
+		r = select(devFd + 1, &fds, NULL, NULL, &tv);
+		if (-1 == r) {
+			perror("select");
+			return false;
+		}
+		else if(0 == r){
+			printf("Timeout while waiting for data! \n");
+			//return false;
+		}
+		else {
+			break;
+		}
 	}
-	if(0 == r){
+	if(r == 0)
 		return false;
-	}
     struct v4l2_buffer buf = {0};
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
@@ -385,24 +399,60 @@ void VideoCapture::printCaps()
 	return;
 }
 
-bool VideoCapture::setAutoexposureEnabled(bool enabled)
+bool VideoCapture::setAutoexposureEnabled(bool enabled, bool dropFPS)
 {
-	v4l2_control ctrl;
-	ctrl.id = V4L2_CID_EXPOSURE_AUTO;
+	struct v4l2_ext_control ctrl[2];
+	struct v4l2_ext_controls ctrlList;
+	memset(&ctrl,0,2*sizeof(v4l2_ext_control));
+	memset(&ctrlList,0,sizeof(v4l2_ext_controls));
+
+	ctrl[0].id = V4L2_CID_EXPOSURE_AUTO_PRIORITY;
+	ctrl[0].size = 0;
+	ctrl[0].value = dropFPS?1:0;
+
+	ctrl[1].id = V4L2_CID_EXPOSURE_AUTO;
 	if(enabled)
-		ctrl.value = V4L2_EXPOSURE_APERTURE_PRIORITY;
+		ctrl[1].value = V4L2_EXPOSURE_APERTURE_PRIORITY;
 	else
-		ctrl.value = V4L2_EXPOSURE_MANUAL;
+		ctrl[1].value = V4L2_EXPOSURE_MANUAL;
 
-	return xioctl(devFd,VIDIOC_S_CTRL, &ctrl) == 0;
+	ctrlList.controls = &ctrl[0];
+	ctrlList.count = 2;
+	ctrlList.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
 
+	int res= xioctl(devFd,VIDIOC_S_EXT_CTRLS, &ctrlList);
+
+	if(res != 0)
+		return false;
+	else
+		return true;
 }
-bool VideoCapture::setExposureTime(int time_100us)
+
+bool VideoCapture::setExposureTime(unsigned int time_100us)
 {
-	v4l2_control ctrl;
+	struct v4l2_ext_control ctrl;
+	struct v4l2_ext_controls ctrlList;
+	memset(&ctrl,0,sizeof(v4l2_ext_control));
+	memset(&ctrlList,0,sizeof(v4l2_ext_controls));
+
 	ctrl.id = V4L2_CID_EXPOSURE_ABSOLUTE;
 	ctrl.value = time_100us;
+	ctrl.size = 0;
 
-	return xioctl(devFd,VIDIOC_S_CTRL, &ctrl) == 0;
+	ctrlList.controls = &ctrl;
+	ctrlList.count = 1;
+	ctrlList.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
+
+	int res =  xioctl(devFd,VIDIOC_S_EXT_CTRLS, &ctrlList);
+	if(res != 0)
+		return false;
+
+	 res = xioctl(devFd,VIDIOC_G_EXT_CTRLS, &ctrlList);
+
+	 if(res != 0)
+		 return false;
+
+	 return true;
+
 }
 }
