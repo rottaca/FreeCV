@@ -141,11 +141,21 @@ bool PointCloudCreator::convertDisparity(Image* dispImg, Image* imageRaw, PointC
 
 			if (use) {
 				float depth = m_f * m_BaseLine / disp;
+				Vector4f pos;
+				pos[0] = (x - m_c[0]) / m_f;
+				pos[1] = (y - m_c[1]) / m_f;
+				pos[2] = 1;
+				pos = pos * depth;
+				pos[3] = 1;
 
-				pd.pos[0] = (x - m_c[0]) / m_f;
-				pd.pos[1] = (y - m_c[1]) / m_f;
-				pd.pos[2] = 1;
-				pd.pos = pd.pos * depth;
+				if(!m_H_world_cam.isEmpty())
+				{
+					pos = m_H_world_cam*pos;
+				}
+
+				pd.pos[0] = pos[0];
+				pd.pos[1] = pos[1];
+				pd.pos[2] = pos[2];
 
 				if (imageRaw != NULL) {
 					if (imageRaw->getFormat() == Image::PF_GRAYSCALE_8) {

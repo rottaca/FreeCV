@@ -205,6 +205,31 @@ public:
 			}
 		}
 	}
+	Matrix<T,COMPILE_ROWS, COMPILE_COLS> transpose(){
+		assert(cols == rows);
+		Matrix<T,COMPILE_ROWS, COMPILE_COLS> mat;
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x <= y; x++) {
+				mat.at(y,x) = at(x,y);
+				mat.at(x,y) = at(y,x);
+			}
+		}
+		return mat;
+	}
+
+	void setTransform(Matrix<T,3,3>R, Vector<T,3> TVec){
+
+		setIdentity();
+		for(int y = 0; y < 3; y++){
+			for (int x = 0; x < 3; x++) {
+				at(y,x) = R.at(y,x);
+			}
+		}
+
+		at(0,3) = TVec[0];
+		at(1,3) = TVec[1];
+		at(2,3) = TVec[2];
+	}
 
 	bool isEmpty(){
 		for (int i = 0; i < rows*cols; i++) {
@@ -228,7 +253,7 @@ public:
 
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
-				nv[r] += v2[c] * at(c, r);
+				nv[r] += v2[c] * at(r,c);
 			}
 		}
 		return nv;

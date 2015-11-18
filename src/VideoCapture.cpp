@@ -298,15 +298,14 @@ bool VideoCapture::grabFrame(Image* frame) {
 			return false;
 		}
 		else if(0 == r){
-			printf("Timeout while waiting for data! \n");
+			//printf("Timeout while waiting for data! \n");
 			//return false;
 		}
 		else {
 			break;
 		}
 	}
-	if(r == 0)
-		return false;
+
     struct v4l2_buffer buf = {0};
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;

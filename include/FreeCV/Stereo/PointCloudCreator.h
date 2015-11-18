@@ -14,6 +14,7 @@
 #include <fstream>
 
 #include <FreeCV/Image/Image.h>
+#include <FreeCV/Core/Matrix.h>
 
 namespace fcv {
 
@@ -30,6 +31,10 @@ public:
 	virtual ~PointCloudCreator();
 
 	bool init(Vector2f C, float f, float baseLine);
+	void setCameraPose(Matrix4x4f pose){
+		m_H_world_cam = pose;
+	}
+
 	bool convertDisparity(Image* dispImg, Image* imageRaw, PointCloud* points, float minDisp = -1, float maxDisp = -1);
 
 	static bool saveToPly(std::string fileName, PointCloud* points);
@@ -38,6 +43,7 @@ public:
 private:
     Vector2f m_c;
     float m_f,m_BaseLine;
+    Matrix4x4f m_H_world_cam;
 };
 
 } /* namespace fcv */

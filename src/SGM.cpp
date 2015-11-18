@@ -83,32 +83,72 @@ bool SGM::init(int width, int height, int maxDisp){
 }
 void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 {
+	if (imgLeft->getFormat() == Image::PF_GRAYSCALE_8) {
+		for (int y = 0; y < m_height; y++) {
+			unsigned short* costPtr = m_CostData + m_width * m_maxDisp * y;
+			unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
+			unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(y);
+			for (int x = 0; x < m_width; x++) {
+				for (int d = 0; d < m_maxDisp; d++) {
 
-	for (int y = 0; y < m_height; y++) {
-		unsigned short* costPtr = m_CostData + m_width*m_maxDisp*y;
-		unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
-		unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(y);
-		for (int x = 0; x < m_width; x++) {
-			for (int d = 0; d < m_maxDisp; d++) {
-
-				if(m_Left2Right){
-					if (x - d < 0)
-						*costPtr++ = 255;		// Sehr hohe kosten TODO: Richtig ?
-					else {
-						// TODO imgRightPtr nicht immer neu berechnen
-						*costPtr++ = abs((*imgLeftPtr) - *(imgRightPtr - d));	// = |L(y,x) - R(y,x-d)|
-					}
-				}else{
-					if (x + d >= m_width)
-						*costPtr++ = 255;	// Sehr hohe kosten TODO: Richtig ?
-					else {
-						// TODO imgRightPtr nicht immer neu berechnen
-						*costPtr++ = abs((*imgRightPtr) - *(imgLeftPtr + d));// = |L(y,x-d) - R(y,x)|
+					if (m_Left2Right) {
+						if (x - d < 0)
+							*costPtr++ = 255;// Sehr hohe kosten TODO: Richtig ?
+						else {
+							// TODO imgRightPtr nicht immer neu berechnen
+							*costPtr++ = abs(
+									(*imgLeftPtr) - *(imgRightPtr - d));// = |L(y,x) - R(y,x-d)|
+						}
+					} else {
+						if (x + d >= m_width)
+							*costPtr++ = 255;// Sehr hohe kosten TODO: Richtig ?
+						else {
+							// TODO imgRightPtr nicht immer neu berechnen
+							*costPtr++ = abs(
+									(*imgRightPtr) - *(imgLeftPtr + d));// = |L(y,x-d) - R(y,x)|
+						}
 					}
 				}
+				imgLeftPtr++;
+				imgRightPtr++;
 			}
-			imgLeftPtr++;
-			imgRightPtr++;
+		}
+		// TODO Funktioniert nicht
+	}else if(imgLeft->getFormat() == Image::PF_RGB_888) {
+		for (int y = 0; y < m_height; y++) {
+			unsigned short* costPtr = m_CostData + m_width * m_maxDisp * y;
+			unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
+			unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(y);
+			for (int x = 0; x < m_width; x++) {
+				for (int d = 0; d < m_maxDisp; d++) {
+
+					if (m_Left2Right) {
+						if (x - d < 0)
+							*costPtr++ = 0xffff; // Sehr hohe kosten TODO: Richtig ?
+						else {
+							*costPtr++ = sqrt(
+									((*(imgLeftPtr + 0)) - *(imgRightPtr - d*3 + 0))*((*(imgLeftPtr + 0)) - *(imgRightPtr - d*3 + 0)) +
+									((*(imgLeftPtr + 1)) - *(imgRightPtr - d*3 + 1))*((*(imgLeftPtr + 1)) - *(imgRightPtr - d*3 + 1)) +
+									((*(imgLeftPtr + 2)) - *(imgRightPtr - d*3 + 2))*((*(imgLeftPtr + 2)) - *(imgRightPtr - d*3 + 2))
+
+							); // = |L(y,x) - R(y,x-d)|
+						}
+					} else {
+						if (x + d >= m_width)
+							*costPtr++ = 0xffff; // Sehr hohe kosten TODO: Richtig ?
+						else {
+							*costPtr++ = sqrt(
+									((*(imgRightPtr + 0)) - *(imgLeftPtr - d*3 + 0))*((*(imgRightPtr + 0)) - *(imgLeftPtr - d*3 + 0)) +
+									((*(imgRightPtr + 1)) - *(imgLeftPtr - d*3 + 1))*((*(imgRightPtr + 1)) - *(imgLeftPtr - d*3 + 1)) +
+									((*(imgRightPtr + 2)) - *(imgLeftPtr - d*3 + 2))*((*(imgRightPtr + 2)) - *(imgLeftPtr - d*3 + 2))
+
+							);
+						}
+					}
+				}
+				imgLeftPtr+=3;
+				imgRightPtr+=3;
+			}
 		}
 	}
 	// Scale to 11 bits
