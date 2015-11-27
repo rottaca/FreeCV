@@ -8,7 +8,7 @@ Features:
     - Distinguishes between debug and release
       - Debug-Messages will be removed in release mode.
       - Log massages contain file name and line number in debug mode.
-  - Contains Matrix and Vector class implementation (@see TODO's).
+  - Contains Matrix and Vector class implementation with compile time and runtime fixed size (@see TODO's).
   - Contains StopWatch class to check performance for example,...
   - Contains Linux compartible VideoCapture implementation using video4linux2 API.
   - Contains an ExposureControl class to control linux webcams.
