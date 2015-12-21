@@ -36,6 +36,11 @@ public:
 	bool setAutoexposureEnabled(bool enabled, bool dropFPS);
 	bool setExposureTime(unsigned int time_us);
 
+	bool isCaptureing()
+	{
+		return m_isCaptureing;
+	}
+
 private:
 	struct buffer {
 	        void   *start;
@@ -46,8 +51,8 @@ private:
 	unsigned int   n_buffers;
 
 	std::string devStr;
-	bool isCaptureing;
-	bool isInitialized;
+	bool m_isCaptureing;
+	bool m_isInitialized;
 
 	int devFd;
 

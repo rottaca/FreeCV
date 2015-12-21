@@ -18,26 +18,31 @@ ExposureController::ExposureController() {
 ExposureController::~ExposureController() {
 
 }
-void ExposureController::setupExposureControl(VideoCapture* cam, ExposureCtrlMode mode, int goalVal)
+bool ExposureController::setupExposureControl(VideoCapture* cam, ExposureCtrlMode mode, int goalVal)
 {
 	m_cam = cam;
 
 	if(mode != AUTOMATIC && goalVal == -1)
 	{
 		LOG_ERROR("Please specify exposure ctrl goal, when manual mode is enabled!");
-		return;
+		return false;
 	}
 
 	m_ctrlMode = mode;
 	m_goalVal = goalVal;
 
-	if(!setAutomaticExpCtrl(mode == AUTOMATIC))
+	if(!setAutomaticExpCtrl(mode == AUTOMATIC)){
 		LOG_ERROR("Can't switch to automatic/manual exposure mode!");
+		return false;
+	}
 
-
-	if(mode == MANUAL_FIXED)
-		if(!setExposureValue(goalVal))
+	if(mode == MANUAL_FIXED){
+		if (!setExposureValue(goalVal)) {
 			LOG_ERROR("Can't set exposure time!");
+			return false;
+		}
+	}
+	return true;
 }
 void ExposureController::controlExposure(Image* imgGray)
 {
@@ -57,6 +62,25 @@ void ExposureController::controlExposure(Image* imgGray)
 	}
 }
 
+void ExposureController::updateGoalVal(int val)
+{
+	switch (m_ctrlMode) {
+	case AUTOMATIC: {
+		return;
+	}
+	case MANUAL_CTRL: {
+		m_goalVal = val;
+	}
+		return;
+	case MANUAL_FIXED: {
+		m_goalVal = val;
+		setExposureValue(val);
+		return;
+	}
+	default:
+		break;
+	}
+}
 bool ExposureController::setAutomaticExpCtrl(bool enable)
 {
 	return m_cam->setAutoexposureEnabled(enable, false);

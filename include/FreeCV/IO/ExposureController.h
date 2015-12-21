@@ -20,8 +20,10 @@ public:
 
 	typedef enum {AUTOMATIC, MANUAL_CTRL, MANUAL_FIXED} ExposureCtrlMode;
 
-	void setupExposureControl(VideoCapture* cam, ExposureCtrlMode mode, int goalVal = -1);
+	bool setupExposureControl(VideoCapture* cam, ExposureCtrlMode mode, int goalVal = -1);
 	void controlExposure(Image* imgGray);
+
+	void updateGoalVal(int val);
 
 private:
 	bool setAutomaticExpCtrl(bool enable);

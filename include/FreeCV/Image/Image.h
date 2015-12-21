@@ -16,6 +16,9 @@
 #include "FreeCV/Core/Logger.h"
 #include "FreeCV/Core/Rectangle.h"
 
+#ifdef QT_FOUND
+	#include <QtGui/qimage.h>
+#endif
 namespace fcv {
 
 class Image {
@@ -31,6 +34,10 @@ public:
 	Image(int width, int height, PixelFormat f, unsigned char* data,
 			bool copyData);
 	Image(Rectangle roi, Image* orgImg);
+
+#ifdef QT_FOUND
+	QImage toQImage();
+#endif
 
 	virtual ~Image();
 

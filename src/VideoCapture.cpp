@@ -26,14 +26,14 @@ static int xioctl(int devFd, int request, void *arg) {
 
 VideoCapture::VideoCapture() {
 	devStr = "";
-	isCaptureing = false;
-	isInitialized = false;
+	m_isCaptureing = false;
+	m_isInitialized = false;
 	devFd = -1;
 	buffers = NULL;
 	n_buffers = 0;
 }
 VideoCapture::~VideoCapture() {
-	if(isCaptureing)
+	if(m_isCaptureing)
 	{
 		stopCapture();
 		closeDev();
@@ -213,11 +213,11 @@ bool VideoCapture::openAndInitDev(string devStr, int reqWidth, int reqHeight) {
 			return false;
         }
 	}
-    isInitialized = true;
+    m_isInitialized = true;
 	return true;
 }
 void VideoCapture::closeDev() {
-	if(isCaptureing)
+	if(m_isCaptureing)
 		stopCapture();
 
     for (int i = 0; i < n_buffers; ++i)
@@ -225,11 +225,11 @@ void VideoCapture::closeDev() {
 
 	close(devFd);
 	devFd = -1;
-	isInitialized = false;
+	m_isInitialized = false;
 }
 
 bool VideoCapture::startCapture() {
-	isCaptureing = false;
+	m_isCaptureing = false;
 	for (int i = 0; i < n_buffers; ++i) {
 		struct v4l2_buffer buf;
 
@@ -252,7 +252,7 @@ bool VideoCapture::startCapture() {
 		return false;
 	}
 	LOG_DEBUG("Capture started.");
-	isCaptureing = true;
+	m_isCaptureing = true;
 	return true;
 }
 
@@ -266,7 +266,7 @@ bool VideoCapture::stopCapture() {
 		return false;
 	}
 	LOG_DEBUG("Capture stopped.");
-	isCaptureing = false;
+	m_isCaptureing = false;
 	return true;
 
 }
@@ -279,7 +279,7 @@ int VideoCapture::getHeight() {
 }
 
 bool VideoCapture::grabFrame(Image* frame) {
-	if((!isInitialized && ! isCaptureing) || frame == NULL)
+	if((!m_isInitialized && ! m_isCaptureing) || frame == NULL)
 		return false;
 
 	fd_set fds;

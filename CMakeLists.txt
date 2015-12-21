@@ -9,6 +9,15 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+find_package(Qt5Widgets)
+if(Qt5Widgets_FOUND)
+    message(STATUS "QT found! Qt Interface available!")
+    add_definitions(-DQT_FOUND)
+else()
+    message(WARNING "QT not found! Qt Interface not available!")
+endif()
+    
+
 SET(SOURCE_FILES 
     src/Logger.cpp
     src/Vector.cpp
@@ -64,8 +73,10 @@ target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
     "$<INSTALL_INTERFACE:include>"
 )
 
-SET(TARGET FreeCV PROPERTY CMAKE_C_FLAGS_DEBUG "-DDEBUG")
-SET(TARGET FreeCV PROPERTY CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
+if(Qt5Widgets_FOUND)
+    qt5_use_modules(FreeCV Widgets)
+endif()
+
 
 SET(TEST_SOURCE_FILES
     testMain.cpp
@@ -73,7 +84,6 @@ SET(TEST_SOURCE_FILES
 
 ADD_EXECUTABLE(FreeCVTest ${TEST_SOURCE_FILES})
 TARGET_LINK_LIBRARIES(FreeCVTest FreeCV)
-
 
 # copy all needed files to binary dir (when cmake)
 file(GLOB files_needed
