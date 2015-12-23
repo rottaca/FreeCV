@@ -10,12 +10,13 @@ option(OPTION_WithOpenMP "WithOpenMP" ON)
 option(OPTION_WithQt "WithQt" ON)
 
 if(OPTION_WithOpenMP)
-    FIND_PACKAGE(OpenMP REQUIRED)
+    FIND_PACKAGE(OpenMP)
     if(OPENMP_FOUND)
         message("OpenMP found. Multithreading enabled.") 
         set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         LIST(APPEND ADDITIONAL_LIBS "gomp")
+        add_definitions(-DWITH_OPENMP)
     endif()
 endif()
 
@@ -23,7 +24,7 @@ if(OPTION_WithQt)
     find_package(Qt5Widgets)
     if(Qt5Widgets_FOUND)
         message(STATUS "QT found! Qt Interface available!")
-        add_definitions(-DQT_FOUND)
+        add_definitions(-DWITH_QT)
     else()
         message(WARNING "QT not found! Qt Interface not available!")
     endif()
@@ -101,7 +102,6 @@ macro(PrintOptionResult optName optEnabled optFound)
     else()
       message(STATUS ${optName} ": OFF")
     endif()
-
 endmacro()
 
 # Print summary
@@ -115,7 +115,11 @@ message(STATUS "")
 
 
 
-
+#######################################################################
+#######################################################################
+### TestSoftware
+#######################################################################
+#######################################################################
 SET(TEST_SOURCE_FILES
     testMain.cpp
 )

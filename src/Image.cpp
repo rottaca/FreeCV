@@ -161,7 +161,7 @@ void Image::crop(Rectangle roi, Image* orgImg) {
 
 }
 
-#ifdef QT_FOUND
+#ifdef WITH_QT
 	QImage Image::toQImage()
 	{
 		QImage::Format format;

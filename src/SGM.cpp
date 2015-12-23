@@ -14,7 +14,9 @@
 #include <iostream>
 #include <math.h>
 
+#ifdef WITH_OPENMP
 #include <omp.h>
+#endif
 
 using namespace std;
 
