@@ -14,6 +14,8 @@
 #include <iostream>
 #include <math.h>
 
+#include <omp.h>
+
 using namespace std;
 
 namespace fcv {
@@ -286,10 +288,8 @@ void SGM::aggregateCost(){
 		costIdx+= addOneX; 		// Skip x = 0;
 		aggrGlobalIdx+= addOneX;
 		for(int x = 1; x < m_width; x++){
-#pragma omp parallel
-			{
-#pragma omp sections
-				{
+#pragma omp parallel sections num_threads(4)
+		{
 #pragma omp section
 			{
 			int IdxCurrX = offs1 + (x) * addOneX;
@@ -351,7 +351,6 @@ void SGM::aggregateCost(){
 
 			costIdx+= addOneX;
 			aggrGlobalIdx+= addOneX;
-		}
 	}
 	memcpy(&m_tmpAggrCost[offs6], m_CostData,	m_width * m_maxDisp * sizeof(short));
 	memcpy(&m_tmpAggrCost[offs7], m_CostData,	m_width * m_maxDisp * sizeof(short));
@@ -376,8 +375,12 @@ void SGM::aggregateCost(){
 		costIdx -= addOneX; 		// Skip x = 0;
 		aggrGlobalIdx -= addOneX;
 		for (int x = m_width-2; x >= 0; x--) {
-			IdxCurrX = offs8 + (x) * addOneX;
-			IdxPrevX = offs8 + (x + 1) * addOneX;
+#pragma omp parallel sections num_threads(4)
+		{
+#pragma omp section
+			{
+			int IdxCurrX = offs8 + (x) * addOneX;
+			int	IdxPrevX = offs8 + (x + 1) * addOneX;
 			// Calculate result and store in tmpBuff
 			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[0]);
 
@@ -387,9 +390,12 @@ void SGM::aggregateCost(){
 			// Use a second temp buffer. Wen can swap buffers directly because the old values are used in the next step
 			memcpy(&m_tmpAggrCost[IdxPrevX], tmpBuff2, m_maxDisp * sizeof(short));
 			memcpy(tmpBuff2, tmpBuff[0], m_maxDisp * sizeof(short));
+			}
 
-			IdxPrevX = offs7 + x * addOneX;
-			IdxCurrX = offs7 + x * addOneX;
+#pragma omp section
+			{
+			int IdxPrevX = offs7 + x * addOneX;
+			int IdxCurrX = offs7 + x * addOneX;
 			// Calculate result and store in tmpBuff
 			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[1]);
 
@@ -397,9 +403,12 @@ void SGM::aggregateCost(){
 				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[1][i];
 			}
 			memcpy(&m_tmpAggrCost[IdxCurrX], tmpBuff[1], m_maxDisp * sizeof(short));
+			}
 
-			IdxCurrX = offs6 + x * addOneX;
-			IdxPrevX = offs6 + (x - 1) * addOneX;
+#pragma omp section
+			{
+			int IdxCurrX = offs6 + x * addOneX;
+			int IdxPrevX = offs6 + (x - 1) * addOneX;
 			// Calculate result and store in tmpBuff
 			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[2]);
 
@@ -407,16 +416,20 @@ void SGM::aggregateCost(){
 				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[2][i];
 			}
 			memcpy(&m_tmpAggrCost[IdxCurrX], tmpBuff[2], m_maxDisp * sizeof(short));
+			}
 
-			IdxCurrX = offs5;
-			IdxPrevX = offs5;
+#pragma omp section
+			{
+			int IdxCurrX = offs5;
+			int IdxPrevX = offs5;
 			// Calculate result and store in tmpBuff
 			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[3]);
 			for (int i = 0; i < addOneX; i++) {
 				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[3][i];
 			}
 			memcpy(&m_tmpAggrCost[IdxCurrX], tmpBuff[3], m_maxDisp * sizeof(short));
-
+			}
+		}
 			costIdx -= addOneX;
 			aggrGlobalIdx -= addOneX;
 		}

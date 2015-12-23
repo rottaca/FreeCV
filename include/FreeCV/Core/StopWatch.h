@@ -9,7 +9,7 @@
 #define FREECV_INCLUDE_FREECV_CORE_STOPWATCH_H_
 #include <iostream>
 #include <string.h>
-
+#include <sys/time.h>
 #include "FreeCV/Core/Logger.h"
 
 namespace fcv {
@@ -49,7 +49,7 @@ public:
 			float msTime = getTimeDelta();
 			if(msTime < 1000)
 				LOG_FORMAT_INFO("Stopwatch %s: %.0f us elapsed.", m_name.c_str(), msTime);
-			if(msTime < 1000000L)
+			else if(msTime < 1000000L)
 				LOG_FORMAT_INFO("Stopwatch %s: %.3f ms elapsed.", m_name.c_str(), msTime/1000);
 			else if(msTime < 1000000L*60)
 				LOG_FORMAT_INFO("Stopwatch %s: %.3f sek elapsed.", m_name.c_str(), msTime/1000000);
@@ -60,23 +60,29 @@ public:
 
 	void start(){
 		m_endTime = -1;
-		m_startTime = clock();
+		m_startTime = getCurrentTime();
 		m_isRunning = true;
 	}
 	void stop(){
 		if(m_isRunning)
-			m_endTime = clock();
+			m_endTime = getCurrentTime();
 		m_isRunning = false;
+	}
+
+	static long int getCurrentTime(){
+		struct timeval tp;
+		gettimeofday(&tp, NULL);
+		return tp.tv_sec * 1000000 + tp.tv_usec;
 	}
 
 	/**
 	 * Returns time in microseconds
 	 */
-	clock_t getTimeDelta(){
+	long int getTimeDelta(){
 		if(m_isRunning)
-			return (clock() - m_startTime) * 1000000 / CLOCKS_PER_SEC;
+			return (getCurrentTime() - m_startTime);
 		else if(m_startTime != -1 && m_endTime != -1)
-			return (m_endTime - m_startTime) * 1000000 / CLOCKS_PER_SEC;
+			return (m_endTime - m_startTime);
 		else
 			return 0;
 	}
@@ -84,8 +90,8 @@ public:
 private:
 	bool m_logOnDestroy;
 	bool m_isRunning;
-	clock_t m_startTime;
-	clock_t m_endTime;
+	long int m_startTime;
+	long int m_endTime;
 	std::string m_name;
 };
 

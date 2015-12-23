@@ -1,20 +1,32 @@
 cmake_minimum_required (VERSION 2.6)
 PROJECT(FreeCV)
 
-#FIND_PACKAGE(OpenMP REQUIRED)
-if(OPENMP_FOUND)
-    message("OpenMP found. Multithreading enabled.") 
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+# Define software switches
+# Avaialble switches are
+# - WithOpenMP (default: ON)
+# - WithQt (default: ON)
+
+option(OPTION_WithOpenMP "WithOpenMP" ON)
+option(OPTION_WithQt "WithQt" ON)
+
+if(OPTION_WithOpenMP)
+    FIND_PACKAGE(OpenMP REQUIRED)
+    if(OPENMP_FOUND)
+        message("OpenMP found. Multithreading enabled.") 
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        LIST(APPEND ADDITIONAL_LIBS "gomp")
+    endif()
 endif()
 
-
-find_package(Qt5Widgets)
-if(Qt5Widgets_FOUND)
-    message(STATUS "QT found! Qt Interface available!")
-    add_definitions(-DQT_FOUND)
-else()
-    message(WARNING "QT not found! Qt Interface not available!")
+if(OPTION_WithQt)
+    find_package(Qt5Widgets)
+    if(Qt5Widgets_FOUND)
+        message(STATUS "QT found! Qt Interface available!")
+        add_definitions(-DQT_FOUND)
+    else()
+        message(WARNING "QT not found! Qt Interface not available!")
+    endif()
 endif()
     
 
@@ -65,7 +77,7 @@ SET(HEADER_FILES
 
 
 ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} )
-target_link_libraries(FreeCV  ${OpenMP_CXX_LIBRARIES})
+target_link_libraries(FreeCV  ${ADDITIONAL_LIBS})
 
 target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
     # Headers used from source/build location:
@@ -77,6 +89,31 @@ target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 if(Qt5Widgets_FOUND)
     qt5_use_modules(FreeCV Widgets)
 endif()
+
+
+macro(PrintOptionResult optName optEnabled optFound)
+    if(${optEnabled})
+        if(${optFound})
+          message(STATUS ${optName} ": ON - FOUND")
+        else()
+          message(ERROR ${optName} ": ON - NOT FOUND!")
+        endif()
+    else()
+      message(STATUS ${optName} ": OFF")
+    endif()
+
+endmacro()
+
+# Print summary
+message(STATUS "")
+message(STATUS "")
+message(STATUS "-----------Summaray of FreeCV-Build-----------")
+PrintOptionResult("OpenMP" OPTION_WithOpenMP OPENMP_FOUND)
+PrintOptionResult("Qt" OPTION_WithQt Qt5Widgets_FOUND)
+message(STATUS "")
+message(STATUS "")
+
+
 
 
 SET(TEST_SOURCE_FILES
