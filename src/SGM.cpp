@@ -45,8 +45,8 @@ void SGM::deinit(){
 	{
 		delete[] m_CostData;
 		m_CostData = NULL;
-		delete[] m_aggregatedCostsDir;
-		m_aggregatedCostsDir = NULL;
+		delete[] m_tmpAggrCost;
+		m_tmpAggrCost = NULL;
 		delete[] m_disparityMap;
 		m_disparityMap = NULL;
 		delete[] m_aggregatedCosts;
@@ -72,22 +72,21 @@ bool SGM::init(int width, int height, int maxDisp){
 	m_aggregatedCosts = new unsigned short[width*height*maxDisp];
 	memset(m_aggregatedCosts,0,m_buffSize);
 
-	m_aggregatedCostsDir = new unsigned short[width*height*maxDisp];
-	memset(m_aggregatedCostsDir,0,m_buffSize);
+	m_tmpAggrCost = new unsigned short[3*width*maxDisp + maxDisp];
+	memset(m_tmpAggrCost,0,(3*width*maxDisp + maxDisp)*sizeof(short));
 
 	m_disparityMap = new float[width*height];
 	memset(m_disparityMap,0,width*height*sizeof(float));
-
 	m_isInitialized = true;
 	return true;
 }
 void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 {
 	if (imgLeft->getFormat() == Image::PF_GRAYSCALE_8) {
+		unsigned short* costPtr = m_CostData;
+		unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>();
+		unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>();
 		for (int y = 0; y < m_height; y++) {
-			unsigned short* costPtr = m_CostData + m_width * m_maxDisp * y;
-			unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(y);
-			unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(y);
 			for (int x = 0; x < m_width; x++) {
 				for (int d = 0; d < m_maxDisp; d++) {
 
@@ -113,6 +112,87 @@ void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 				imgRightPtr++;
 			}
 		}
+		// Matching cost census
+		// Window size: 5x5 -> 25 bits
+//		unsigned int censusL, censusR;
+//		unsigned int distToStart = (m_width+2) * m_maxDisp * 2;
+//		memset(m_CostData,0,m_width*m_height*m_maxDisp*sizeof(unsigned short));
+//
+//		unsigned short* costPtr = m_CostData +  m_width * m_maxDisp * 2 + 2*m_maxDisp;
+//		unsigned char* imgLeftPtr = imgLeft->getPtr<unsigned char>(2,2);
+//		unsigned char* imgRightPtr = imgRight->getPtr<unsigned char>(2,2);
+//
+//		for (int y = 2; y < m_height-2; y++) {
+//			for (int x = 2; x < m_width-2; x++) {
+//				for (int d = 0; d < m_maxDisp; d++) {
+//					censusL = 0;
+//					censusR = 0;
+//					if (m_Left2Right) {
+
+//						if (x - d < 0)
+//							*costPtr++ = 255; // Sehr hohe kosten TODO: Richtig ?
+//						else {
+//
+//							unsigned char pixVal = *imgLeftPtr;
+//							unsigned char* ptrL = imgLeftPtr - distToStart;
+//
+//							int cnt = 0;
+//							for (int i = 0; i < 5; i++) {
+//								for (int j = 0; j < 5; j++) {
+//									if (*ptrL < pixVal)
+//										censusL |= (1 << cnt);
+//									ptrL++;
+//									cnt++;
+//								}
+//								ptrL += (m_width - 1) * m_maxDisp;
+//							}
+//							unsigned char pixValR = *imgRightPtr;
+//							unsigned char* ptrR = imgRightPtr - distToStart;
+//
+//							cnt = 0;
+//							for (int i = 0; i < 5; i++) {
+//								for (int j = 0; j < 5; j++) {
+//									if (*ptrR < pixValR)
+//										censusR |= (1 << cnt);
+//									ptrR++;
+//									cnt++;
+//								}
+//								ptrR += (m_width - 1) * m_maxDisp;
+//							}
+//							int delta = censusL ^ censusR;
+//							short dist = 0;
+////							LOG_FORMAT_INFO("Delta %d", delta);
+//							while (delta) {
+//								++dist;
+//								delta &= delta - 1;
+//							}
+////							LOG_FORMAT_INFO("Dist %d", dist);
+//							*costPtr++ = dist;
+//						}
+//						if (x - d < 0)
+//							*costPtr++ = 255;// Sehr hohe kosten TODO: Richtig ?
+//						else {
+//							// TODO imgRightPtr nicht immer neu berechnen
+//							*costPtr++ = abs(
+//									(*imgLeftPtr) - *(imgRightPtr - d));// = |L(y,x) - R(y,x-d)|
+//						}
+//					} else {
+//						if (x + d >= m_width)
+//							*costPtr++ = 255; // Sehr hohe kosten TODO: Richtig ?
+//						else {
+//							// TODO imgRightPtr nicht immer neu berechnen
+//							*costPtr++ = abs(
+//									(*imgRightPtr) - *(imgLeftPtr + d)); // = |L(y,x-d) - R(y,x)|
+//						}
+//					}
+//				}
+//				imgLeftPtr++;
+//				imgRightPtr++;
+//			}
+//			imgLeftPtr+=4;
+//			imgRightPtr+=4;
+//			costPtr+=4*m_maxDisp;
+//		}
 		// TODO Funktioniert nicht
 	}else if(imgLeft->getFormat() == Image::PF_RGB_888) {
 		for (int y = 0; y < m_height; y++) {
@@ -152,267 +232,197 @@ void SGM::calculateCost(Image* imgLeft, Image* imgRight)
 		}
 	}
 	// Scale to 11 bits
-//	ununsigned shortax = *max_element(m_CostData,
-//			m_CostData + m_dataSize);
-//
-//	costPtr = m_CostData;
-//	for (int i = 0; i < m_dataSize; i++)
-//		*costPtr++ = *costPtr * 2047 / max;
+	unsigned short max = *max_element(m_CostData, m_CostData + m_dataSize);
 
+	unsigned short* costPtr = m_CostData;
+	for (int i = 0; i < m_dataSize; i++) {
+		costPtr[i] = costPtr[i] * 0x3ff / max;
+	}
 }
 
-// TODO REWRITE
 void SGM::aggregateCost(){
 
+	int addOneX = m_maxDisp;
+	int addOneY = m_width*m_maxDisp;
 
-	int idxTopLeft = 0,
-	idxTopRight = (m_width-1) * m_maxDisp,
-	idxBottomLeft = (m_height-1)*m_width*m_maxDisp,
-	idxBottomRight = ((m_height-1)*m_width + m_width-1)*m_maxDisp,
-	addOneX = m_maxDisp,
-	addOneY = m_width*m_maxDisp,
-	offs;
+	memset(m_aggregatedCosts,0,m_buffSize);
+	memset(m_tmpAggrCost,0,(3*m_width*m_maxDisp + m_maxDisp)*sizeof(short));
 
-	// Reset memory of aggreated costs
-	memset(m_aggregatedCosts,0, m_buffSize);
+	// Offsets into buffer
+	int offs1 = 0;
+	int offs2 = m_width*m_maxDisp;
+	int offs3 = 2*m_width*m_maxDisp;
+	int offs4 = 3*m_width*m_maxDisp;
 
-	int xCurr,yCurr;
-	// Create an aggregated costs buffer for each path
-	for(int p = 0; p < m_paths.size();p++){
-		Path path = m_paths.at(p);
-//#ifndef NDEBUG
-		cout << "Aggregate Path: " << path.x << " " << path.y << endl;
-//#endif
+	int offs5 = 3*m_width*m_maxDisp;
+	int offs6 = 0;
+	int offs7 = m_width*m_maxDisp;
+	int offs8 = 2*m_width*m_maxDisp;
 
-		StopWatch sw("Aggregate Path");
-		// Check which side of the image is the start and init the whole image border on that side
-		initAggregateCostDir(path);
-		// Offset to next pixel
-		offs = path.y*addOneY + path.x*addOneX;
+	unsigned short tmpBuff[4][m_maxDisp];
+	unsigned short tmpBuff2[m_maxDisp];
 
-		// from right to left
-		if(path.x < 0)
-		{
-			// Accumulate costs
-			// Go from right to left on each line
+	memcpy(&m_tmpAggrCost[offs1],m_CostData,m_width*m_maxDisp*sizeof(short));
+	memcpy(&m_tmpAggrCost[offs2],m_CostData,m_width*m_maxDisp*sizeof(short));
+	memcpy(&m_tmpAggrCost[offs3],m_CostData,m_width*m_maxDisp*sizeof(short));
 
-		cout << "Aggregate -X-Dir" << endl;
+	int costIdx = addOneY;
+	int aggrGlobalIdx = addOneY;
+	int IdxPrevX;
+	int IdxCurrX;
 
-//#pragma omp parallel for
-			for(int y = 0; y  < m_height; y++){
-				unsigned short* costPtr;
-				unsigned short* aggrcostPtrDirPrev;
-				unsigned short* aggrcostPtrDir;
-				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight - addOneX + y*addOneY;
-				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData  + idxTopRight + y*addOneY;
+	for (int i = 0; i < addOneY; i++) {
+		m_aggregatedCosts[i] += 4*m_CostData[i];
+	}
 
+	for(int y = 1; y < m_height; y++){
+		// Init first x from cost buffer for path 4
+		memcpy(&m_tmpAggrCost[offs4],&m_CostData[costIdx],m_maxDisp*sizeof(short));
 
-//				cout << "loop: " << y << endl;
-				// Pointer still in image?
-				xCurr = m_width-2;
-				yCurr = y;
-				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height &&
-						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize &&
-						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
+		// Copy initial value to results
+		for (int i = 0; i < addOneX; i++) {
+			m_aggregatedCosts[aggrGlobalIdx + i] += 4*m_CostData[costIdx + i];
+		}
+		costIdx+= addOneX; 		// Skip x = 0;
+		aggrGlobalIdx+= addOneX;
+		for(int x = 1; x < m_width; x++){
+#pragma omp parallel
+			{
+#pragma omp sections
+				{
+#pragma omp section
+			{
+			int IdxCurrX = offs1 + (x) * addOneX;
+			int IdxPrevX = offs1 + (x-1) * addOneX;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[0]);
 
+//			for (int i = 0; i < addOneX; i++) {
+//				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[0][i];
+//			}
+			// Use a second temp buffer. Wen can swap buffers directly because the old values are used in the next step
+			memcpy(&m_tmpAggrCost[IdxPrevX],tmpBuff2,m_maxDisp*sizeof(short));
+			memcpy(tmpBuff2,tmpBuff[0],m_maxDisp*sizeof(short));
+			}
 
-//					cout << "x: "<< x << endl;
-					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
+#pragma omp section
+			{
+			int IdxPrevX = offs2 + x * addOneX;
+			int IdxCurrX = offs2 + (x) * addOneX;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[1]);
 
-					aggrcostPtrDirPrev = aggrcostPtrDir;
-					aggrcostPtrDir+=offs;
-					costPtr+=offs;
-					xCurr += path.x;
-					yCurr += path.y;
+//			for (int i = 0; i < addOneX; i++) {
+//				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[1][i];
+//			}
+			memcpy(&m_tmpAggrCost[IdxCurrX],tmpBuff[1],m_maxDisp*sizeof(short));
+			}
+#pragma omp section
+			{
+			int IdxCurrX = offs3 + x * addOneX;
+			int IdxPrevX = offs3 + (x + 1) * addOneX;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[2]);
+
+//			for (int i = 0; i < addOneX; i++) {
+//				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[2][i];
+//			}
+			memcpy(&m_tmpAggrCost[IdxCurrX],tmpBuff[2],m_maxDisp*sizeof(short));
+			}
+
+#pragma omp section
+			{
+			int IdxCurrX = offs4;
+			int IdxPrevX = offs4;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[3]);
+//			for (int i = 0; i < addOneX; i++) {
+//				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[3][i];
+//			}
+			memcpy(&m_tmpAggrCost[IdxCurrX],tmpBuff[3],m_maxDisp*sizeof(short));
+			}
 				}
 			}
-		}
-		// From left to right
-		else if (path.x > 0) {
-			// Accumulate costs
-			// Go from right to left on each line
-//#ifndef NDEBUG
-		cout << "Aggregate X-Dir" << endl;
-//#endif
 
-			for(int y = 0; y  < m_height ; y++){
-				unsigned short* costPtr;
-				unsigned short* aggrcostPtrDirPrev;
-				unsigned short* aggrcostPtrDir;
-				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + idxTopLeft +addOneX + y*addOneY;
-				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData  + idxTopLeft + y*addOneY;
-
-				if(aggrcostPtrDirPrev < m_aggregatedCostsDir)
-					continue;
-
-				// Pointer still in image?
-				xCurr = 1;
-				yCurr = y;
-				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height &&
-						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize&&
-						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
-
-
-//					cout << "x: "<< x << endl;
-					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
-
-					aggrcostPtrDirPrev = aggrcostPtrDir;
-					aggrcostPtrDir+=offs;
-					costPtr+=offs;
-					xCurr += path.x;
-					yCurr += path.y;
-				}
+			// All all 4 values
+			for (int i = 0; i < addOneX; i++) {
+				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[0][i] +  tmpBuff[1][i] +  tmpBuff[2][i] +  tmpBuff[3][i];
 			}
+
+			costIdx+= addOneX;
+			aggrGlobalIdx+= addOneX;
 		}
-		// from right to left
-		if(path.y < 0)
-		{
-			// Accumulate costs
-			// Go from right to left on each line
-//#ifndef NDEBUG
-		cout << "Aggregate -Y-Dir" << endl;
-//#endif
+	}
+	memcpy(&m_tmpAggrCost[offs6], m_CostData,	m_width * m_maxDisp * sizeof(short));
+	memcpy(&m_tmpAggrCost[offs7], m_CostData,	m_width * m_maxDisp * sizeof(short));
+	memcpy(&m_tmpAggrCost[offs8], m_CostData,	m_width * m_maxDisp * sizeof(short));
 
-			for(int x = 0; x  < m_width ; x++){
-				unsigned short* costPtr;
-				unsigned short* aggrcostPtrDirPrev;
-				unsigned short* aggrcostPtrDir;
-				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft - addOneY + x*addOneX;
-				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData + idxBottomLeft  + x*addOneX;
+	costIdx = m_width*m_height*m_maxDisp - addOneY;
+	aggrGlobalIdx = m_width*m_height*m_maxDisp - addOneY;
 
-				// Pointer still in image?
-				xCurr = x;
-				yCurr = m_height-2;
-				while(xCurr >= 0 && yCurr >= 0 && xCurr < m_width && yCurr < m_height&&
-						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize&&
-						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
+	for (int i = 0; i < addOneY; i++) {
+		m_aggregatedCosts[aggrGlobalIdx + i] += 4 * m_CostData[costIdx + i];
+	}
 
-					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
+	for (int y = m_height-2; y >= 0; y--) {
+		// Init first x from cost buffer for path 4
+		memcpy(&m_tmpAggrCost[offs4], &m_CostData[costIdx], m_maxDisp * sizeof(short));
 
-					aggrcostPtrDirPrev = aggrcostPtrDir;
-					aggrcostPtrDir+=offs;
-					costPtr+=offs;
-					xCurr += path.x;
-					yCurr += path.y;
+		// Copy initial value to results
+		for (int i = 0; i < addOneX; i++) {
+			m_aggregatedCosts[aggrGlobalIdx + i] += 4*m_CostData[costIdx + i];
+		}
 
-				}
+		costIdx -= addOneX; 		// Skip x = 0;
+		aggrGlobalIdx -= addOneX;
+		for (int x = m_width-2; x >= 0; x--) {
+			IdxCurrX = offs8 + (x) * addOneX;
+			IdxPrevX = offs8 + (x + 1) * addOneX;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[0]);
+
+			for (int i = 0; i < addOneX; i++) {
+				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[0][i];
 			}
-		}
-		// From left to right
-		else if (path.y > 0) {
+			// Use a second temp buffer. Wen can swap buffers directly because the old values are used in the next step
+			memcpy(&m_tmpAggrCost[IdxPrevX], tmpBuff2, m_maxDisp * sizeof(short));
+			memcpy(tmpBuff2, tmpBuff[0], m_maxDisp * sizeof(short));
 
-			// Accumulate costs
-			// Go from right to left on each line
-//#ifndef NDEBUG
-		cout << "Aggregate Y-Dir" << endl;
-//#endif
+			IdxPrevX = offs7 + x * addOneX;
+			IdxCurrX = offs7 + x * addOneX;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[1]);
 
-			for(int x = 0; x  < m_width ; x++){
-				unsigned short* costPtr;
-				unsigned short* aggrcostPtrDirPrev;
-				unsigned short* aggrcostPtrDir;
-				// Point to last row
-				aggrcostPtrDir = m_aggregatedCostsDir + x*addOneX + addOneY;
-				aggrcostPtrDirPrev = aggrcostPtrDir - offs;
-				costPtr = m_CostData + x*addOneX + addOneY;
-
-				if (aggrcostPtrDirPrev < m_aggregatedCostsDir)
-					continue;
-
-				// Pointer still in image?
-				xCurr = x;
-				yCurr = 1;
-				while(xCurr >= 0 && yCurr >= 0 &&
-						xCurr < m_width && yCurr < m_height &&
-						aggrcostPtrDir >= m_aggregatedCostsDir && aggrcostPtrDir < m_aggregatedCostsDir + m_buffSize&&
-						aggrcostPtrDirPrev >= m_aggregatedCostsDir && aggrcostPtrDirPrev < m_aggregatedCostsDir + m_buffSize){
-
-
-					evaluatePath(aggrcostPtrDirPrev, costPtr, aggrcostPtrDir);
-
-					aggrcostPtrDirPrev = aggrcostPtrDir;
-					aggrcostPtrDir+=offs;
-					costPtr+=offs;
-					xCurr += path.x;
-					yCurr += path.y;
-				}
+			for (int i = 0; i < addOneX; i++) {
+				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[1][i];
 			}
+			memcpy(&m_tmpAggrCost[IdxCurrX], tmpBuff[1], m_maxDisp * sizeof(short));
+
+			IdxCurrX = offs6 + x * addOneX;
+			IdxPrevX = offs6 + (x - 1) * addOneX;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[2]);
+
+			for (int i = 0; i < addOneX; i++) {
+				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[2][i];
+			}
+			memcpy(&m_tmpAggrCost[IdxCurrX], tmpBuff[2], m_maxDisp * sizeof(short));
+
+			IdxCurrX = offs5;
+			IdxPrevX = offs5;
+			// Calculate result and store in tmpBuff
+			evaluatePath(&m_tmpAggrCost[IdxPrevX], &m_CostData[costIdx], tmpBuff[3]);
+			for (int i = 0; i < addOneX; i++) {
+				m_aggregatedCosts[aggrGlobalIdx + i] += tmpBuff[3][i];
+			}
+			memcpy(&m_tmpAggrCost[IdxCurrX], tmpBuff[3], m_maxDisp * sizeof(short));
+
+			costIdx -= addOneX;
+			aggrGlobalIdx -= addOneX;
 		}
-
-//		aggrcostPtr = m_aggregatedCosts;
-//		aggrcostPtrDir = m_aggregatedCostsDir;
-
-		for(int i = 0; i < m_dataSize; i++){
-			m_aggregatedCosts[i] += m_aggregatedCostsDir[i];
-		}
-
 	}
 }
-void SGM::initAggregateCostDir(Path p)
-{
-	unsigned short* costPtr;
-	unsigned short* aggrcostPtrDir;
 
-	int idxTopLeft = 0,
-	idxTopRight = (m_width-1) * m_maxDisp,
-	idxBottomLeft = (m_height-1)*m_width*m_maxDisp,
-	idxBottomRight = ((m_height-1)*m_width + m_width-1)*m_maxDisp,
-	addOneRow = m_maxDisp,
-	addOneColumn = m_width*m_maxDisp;
-
-	memset(m_aggregatedCostsDir,0,m_buffSize);
-
-	// from right to left
-	if (p.x < 0) {
-		// Point to the last column
-		costPtr = m_CostData + idxTopRight;
-		aggrcostPtrDir = m_aggregatedCostsDir + idxTopRight;
-		// Copy Data
-		for (int h = 0; h < m_height; h++) {
-			memcpy(aggrcostPtrDir, costPtr, sizeof(unsigned short) * m_maxDisp);// Copy all DisparityCosts of a pixel
-			costPtr += addOneColumn;
-			aggrcostPtrDir += addOneColumn;
-		}
-	}
-	// From left to right
-	else if (p.x > 0) {
-
-		// Point to the first column
-		costPtr = m_CostData;
-		aggrcostPtrDir = m_aggregatedCostsDir;
-		// Copy Data
-		for (int h = 0; h < m_height; h++) {
-			memcpy(aggrcostPtrDir, costPtr, sizeof(unsigned short) * m_maxDisp);// Copy all DisparitesCosts of a pixel
-			costPtr += addOneColumn;
-			aggrcostPtrDir += addOneColumn;
-		}
-	}
-
-	if (p.y < 0) {
-		// Point to the last row
-		costPtr = m_CostData + idxBottomLeft;
-		aggrcostPtrDir = m_aggregatedCostsDir + idxBottomLeft;
-		// Copy Data
-		memcpy(aggrcostPtrDir, costPtr,
-				sizeof(unsigned short) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
-	}
-	// From left to right
-	else if (p.y > 0) {
-		// Point to the first row
-		costPtr = m_CostData;
-		aggrcostPtrDir = m_aggregatedCostsDir;
-		// Copy Data
-		memcpy(aggrcostPtrDir, costPtr,
-				sizeof(unsigned short) * m_maxDisp * m_width);// Copy all DisparitesCosts of a pixel
-	}
-
-}
 inline void SGM::evaluatePath(unsigned short* priorAccPtr, unsigned short* currCostPtr, unsigned short* currentAccPtr)
 {
 	// Add current cost
@@ -450,16 +460,14 @@ void SGM::computeDisparityMap()
 {
 
 //#pragma omp parallel for
+	unsigned int idx = 0;
 	for (int i = 0; i < m_height * m_width; i++) {
 
-		unsigned short* aggCostPtr = m_aggregatedCosts + m_maxDisp*i;
-		unsigned short* costPtr = m_CostData + m_maxDisp*i;
-
+		unsigned short* aggCostPtr = &m_aggregatedCosts[idx];
 		// Index is Disparity
-		m_disparityMap[i] = min_element(aggCostPtr, aggCostPtr + m_maxDisp)	- aggCostPtr;
+		m_disparityMap[i] = min_element(aggCostPtr, aggCostPtr+m_maxDisp)- aggCostPtr;
 
-//		costPtr += m_maxDisp;
-//		aggCostPtr += m_maxDisp;
+		idx+= m_maxDisp;
 	}
 }
 bool SGM::processImagePair(Image* imgLeft, Image* imgRight, bool Left2Right)
@@ -502,7 +510,7 @@ bool SGM::l2rConsistencyCheck(Image* dispLeft, Image* dispRight, int threshold)
 		for (int x = 0; x < dispRight->getWidth(); x++) {
 
 			float dispL = *dispLeftPtr;
-			int offsRight = roundf(dispL);
+			int offsRight = floor(dispL + 0.5);
 
 			if(offsRight < 0)
 			{
@@ -520,7 +528,7 @@ bool SGM::l2rConsistencyCheck(Image* dispLeft, Image* dispRight, int threshold)
 			{
 				float dispR = *(dispRightPtr - offsRight);
 
-				if(abs((int)(dispL - dispR)) > threshold)
+				if(dispR <0 || abs((int)(dispL - dispR)) > threshold)
 				{
 					*dispLeftPtr = -1;
 					float* p = dispRightPtr - offsRight;
@@ -540,7 +548,7 @@ bool SGM::l2rConsistencyCheck(Image* dispLeft, Image* dispRight, int threshold)
 		for (int x = 0; x < dispRight->getWidth(); x++) {
 
 			float dispR = *dispRightPtr;
-			int offsetLeft = roundf(dispR);
+			int offsetLeft = floor(dispR + 0.5);;
 
 			if(offsetLeft < 0)
 			{
@@ -558,7 +566,7 @@ bool SGM::l2rConsistencyCheck(Image* dispLeft, Image* dispRight, int threshold)
 			{
 				float dispL = *(dispLeftPtr + offsetLeft);
 
-				if(abs((int)(dispL - dispR)) > threshold)
+				if(dispL <0 || abs((int)(dispL - dispR)) > threshold)
 				{
 					*dispRightPtr = -1;
 					float* p = dispLeftPtr + offsetLeft ;

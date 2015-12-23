@@ -1,13 +1,13 @@
 cmake_minimum_required (VERSION 2.6)
 PROJECT(FreeCV)
 
-FIND_PACKAGE( OpenMP REQUIRED)
+#FIND_PACKAGE(OpenMP REQUIRED)
 if(OPENMP_FOUND)
-    message("OPENMP FOUND")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    message("OpenMP found. Multithreading enabled.") 
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
+
 
 find_package(Qt5Widgets)
 if(Qt5Widgets_FOUND)
@@ -65,6 +65,7 @@ SET(HEADER_FILES
 
 
 ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} )
+target_link_libraries(FreeCV  ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
     # Headers used from source/build location:

@@ -37,7 +37,7 @@ public:
 	}
 
 	long calcExpectedMemoryUsage(){
-		return m_dataSize*sizeof(unsigned short)*3 + m_width*m_height*sizeof(float);
+		return (2*m_dataSize+2*m_width*m_maxDisp + m_maxDisp)*sizeof(short) + m_width*m_height*sizeof(float);
 	}
 
 private:
@@ -59,7 +59,7 @@ private:
 	unsigned short* m_CostData;
 	float* m_disparityMap;
 	unsigned short* m_aggregatedCosts;
-	unsigned short* m_aggregatedCostsDir;
+	unsigned short* m_tmpAggrCost;
 
 	int m_width,m_height, m_maxDisp;
 	size_t m_dataSize, m_buffSize;

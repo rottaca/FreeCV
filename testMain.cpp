@@ -9,7 +9,16 @@
 #include <iostream>
 #include <unistd.h>
 
+#define LOG_TEST_FKT_START(testName) LOG_INFO("Unit test ---------------- \033[32m" testName "\033[39m ----------------");
+#define LOG_TEST_FKT_END(testName, valid) LOG_FORMAT_INFO("Unit test ---------------- \033[32m%s \033[39m ----------------: %s", testName, valid?"\033[32m No Error!\033[39m ": "\033[31m Error! Test failed!\033[39m ");
+#define ERROR_IF_TEST_FAILED(res, testName) if(!res){LOG_TEST_FKT_END(testName, false);}
+
+// Forward declaration
+bool TestSGM();
+
 int main(int argc, char **argv) {
+
+	TestSGM();
 
 //	fcv::Image img3 = fcv::ImageFileManager::loadImage("lena1.pgm");
 //	fcv::Image img5 = fcv::ImageFileManager::loadImage("equalized.pgm");
@@ -55,58 +64,58 @@ int main(int argc, char **argv) {
 //	fcv::imageHoughTransform(&img6,&img3);
 //	fcv::ImageFileManager::saveImage(&img3,"hough.pgm",fcv::ImageFileManager::PGM_ASCII);
 
-	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
-	fcv::Image imgLColor = fcv::ImageFileManager::loadImage("stereo_left_rgb.ppm");
-	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
-
-	assert(imgL.isValid());
-	assert(imgLColor.isValid());
-	assert(imgR.isValid());
-
-	fcv::SGM sgm;
-	fcv::PointCloudCreator pcc;
-
-	sgm.init(imgL.getWidth(), imgL.getHeight(), 60);
-	sgm.updatePenalties(25, 250);
-	long memUsage = sgm.calcExpectedMemoryUsage();
-
-	std::cout << "Expected Memory Usage: " << memUsage / (1024*1024) << " MegaByte" << std::endl;
-
-	fcv::Vector2f c;
-	c[0] = imgL.getWidth()/2;
-	c[1] = imgL.getHeight()/2;
-	pcc.init(c,5299,0.117);
-
-	fcv::Image imgDispL(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
-	fcv::Image imgDispR(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
-
-	{
-		fcv::StopWatch sw("SGM processing");
-		sgm.processImagePair(&imgL, &imgR);
-		memcpy(imgDispL.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
-
-		sgm.processImagePair(&imgL, &imgR, false);
-		memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
-		{
-			fcv::StopWatch sw("L2R Consistency Check");
-			fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
-		}
-	}
-	fcv::PointCloudCreator::PointCloud points;
-	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
-	fcv::PointCloudCreator::saveToPly("data.ply", &points);
-
-	fcv::Image imgDispColor;
-	fcv::convertToPseudoColor(&imgDispL, &imgDispColor, 0 , 60, 0, 120);
-
-	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",
-			fcv::ImageFileManager::PPM_BINARY);
-
-
-	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
-
-	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
-			fcv::ImageFileManager::PPM_BINARY);
+//	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
+//	fcv::Image imgLColor = fcv::ImageFileManager::loadImage("stereo_left_rgb.ppm");
+//	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
+//
+//	assert(imgL.isValid());
+//	assert(imgLColor.isValid());
+//	assert(imgR.isValid());
+//
+//	fcv::SGM sgm;
+//	fcv::PointCloudCreator pcc;
+//
+//	sgm.init(imgL.getWidth(), imgL.getHeight(), 60);
+//	sgm.updatePenalties(25, 250);
+//	long memUsage = sgm.calcExpectedMemoryUsage();
+//
+//	std::cout << "Expected Memory Usage: " << memUsage / (1024*1024) << " MegaByte" << std::endl;
+//
+//	fcv::Vector2f c;
+//	c[0] = imgL.getWidth()/2;
+//	c[1] = imgL.getHeight()/2;
+//	pcc.init(c,5299,0.117);
+//
+//	fcv::Image imgDispL(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
+//	fcv::Image imgDispR(imgL.getWidth(), imgL.getHeight(), fcv::Image::PF_FLOAT_32);
+//
+//	{
+//		fcv::StopWatch sw("SGM processing");
+//		sgm.processImagePair(&imgL, &imgR);
+//		memcpy(imgDispL.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
+//
+//		sgm.processImagePair(&imgL, &imgR, false);
+//		memcpy(imgDispR.getPtr<float>(), sgm.getDisparityData(), imgL.getWidth() * imgL.getHeight() * sizeof(float));
+//		{
+//			fcv::StopWatch sw("L2R Consistency Check");
+//			fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 1);
+//		}
+//	}
+//	fcv::PointCloudCreator::PointCloud points;
+//	pcc.convertDisparity(&imgDispL, &imgLColor, &points, 10);
+//	fcv::PointCloudCreator::saveToPly("data.ply", &points);
+//
+//	fcv::Image imgDispColor;
+//	fcv::convertToPseudoColor(&imgDispL, &imgDispColor, 0 , 60, 0, 120);
+//
+//	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",
+//			fcv::ImageFileManager::PPM_BINARY);
+//
+//
+//	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0 , 60, 0, 120);
+//
+//	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
+//			fcv::ImageFileManager::PPM_BINARY);
 
 
 //	fcv::PointCloudCreator::PointCloud points;
@@ -131,3 +140,66 @@ int main(int argc, char **argv) {
 //	}
 }
 
+bool TestSGM(){
+	LOG_TEST_FKT_START("Semi global matching (SGM)");
+
+	fcv::Image imgL = fcv::ImageFileManager::loadImage("stereo_left_gray.pgm");
+	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
+
+	if(imgL.isValid() && imgR.isValid()){
+		LOG_INFO("Stereo images loaded");
+	}
+	else{
+		LOG_ERROR("Failed to load stereo images.");
+		LOG_TEST_FKT_END("Semi global matching (SGM)", false);
+		return false;
+	}
+
+	fcv::SGM sgm;
+	sgm.init(imgL.getWidth(), imgL.getHeight(), 60);
+	sgm.updatePenalties(50, 250);
+	long memUsage = sgm.calcExpectedMemoryUsage();
+	LOG_FORMAT_INFO("Expected Memory Usage: %f MegaByte",memUsage / (1024.0 * 1024));
+
+	fcv::Image imgDispL,imgDispR;
+	{
+		fcv::StopWatch sw("SGM processing L2R");
+		sgm.processImagePair(&imgL, &imgR);
+		imgDispL.init(imgL.getWidth(), imgL.getHeight(),
+				fcv::Image::PF_FLOAT_32,
+				(unsigned char*) sgm.getDisparityData(), true);
+
+		fcv::ImageFileManager::saveImage(&imgDispL, "disparityLRaw.ppm",
+				fcv::ImageFileManager::PGM_BINARY);
+	}
+	{
+		fcv::StopWatch sw("SGM processing R2L");
+		sgm.processImagePair(&imgL, &imgR, false);
+		imgDispR.init(imgR.getWidth(), imgR.getHeight(),
+				fcv::Image::PF_FLOAT_32,
+				(unsigned char*) sgm.getDisparityData(), true);
+		fcv::ImageFileManager::saveImage(&imgDispR, "disparityRRaw.ppm",
+				fcv::ImageFileManager::PGM_BINARY);
+	}
+	{
+		fcv::StopWatch sw("SGM L2R Consistency Check");
+		fcv::SGM::l2rConsistencyCheck(&imgDispL, &imgDispR, 2);
+
+		fcv::ImageFileManager::saveImage(&imgDispL, "disparityRRes.ppm",
+				fcv::ImageFileManager::PGM_BINARY);
+	}
+
+	fcv::Image imgDispColor;
+	fcv::convertToPseudoColor(&imgDispL, &imgDispColor, 0, 60, 0, 120);
+
+	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityL.ppm",
+			fcv::ImageFileManager::PPM_BINARY);
+
+	fcv::convertToPseudoColor(&imgDispR, &imgDispColor, 0, 60, 0, 120);
+
+	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
+			fcv::ImageFileManager::PPM_BINARY);
+
+	LOG_TEST_FKT_END("Semi global matching (SGM)", true);
+	return true;
+}
