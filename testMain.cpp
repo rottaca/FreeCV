@@ -33,9 +33,12 @@ bool TestSGM();
 
 int main(int argc, char **argv) {
 
+	LOG_INFO("############################################################################\n"
+			 "##################### Test functions for FreeCV-Library ####################\n"
+			 "####################### developed by Andreas Rottach #######################\n"
+			 "############################################################################\n");
 
 	TestMatrix();
-
 	TestSGM();
 
 //	fcv::Image img3 = fcv::ImageFileManager::loadImage("lena1.pgm");
