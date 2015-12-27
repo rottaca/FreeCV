@@ -13,6 +13,7 @@
 #include <typeinfo>
 #include "assert.h"
 #include <algorithm>
+#include <math.h>
 
 #include "FreeCV/Core/Logger.h"
 #include "FreeCV/Core/Macros.h"
@@ -26,14 +27,14 @@ public:
 	 * Creates a vector with the specified size.
 	 * Attention: Parameter will be ignored if vector is a fixed size type.
 	 */
-	Vector(size_t elemCnt){
-		v = NULL;
-		init(elemCnt);
-	}
+//	Vector(size_t elemCnt){
+//		v = NULL;
+//		init(elemCnt);
+//	}
 	Vector(){
 		v = NULL;
 		cnt = 0;
-		init(0);
+		init();
 	}
 	/**
 	 * Copy constructor
@@ -42,6 +43,39 @@ public:
 		v = NULL;
 		init(v2.getSize(),v2.v);
 	}
+
+	// Constructs for different sized vectors
+	Vector(T v0){
+		v = NULL;
+		cnt = 0;
+		init();
+		v[0] = v0;
+	}
+	Vector(T v0,T v1){
+		v = NULL;
+		cnt = 0;
+		init();
+		v[0] = v0;
+		v[1] = v1;
+	}
+	Vector(T v0,T v1,T v2){
+		v = NULL;
+		cnt = 0;
+		init();
+		v[0] = v0;
+		v[1] = v1;
+		v[2] = v2;
+	}
+	Vector(T v0,T v1,T v2,T v3){
+		v = NULL;
+		cnt = 0;
+		init();
+		v[0] = v0;
+		v[1] = v1;
+		v[2] = v2;
+		v[3] = v3;
+	}
+
 	~Vector(){
 		if(v != NULL)
 			delete[] v;
@@ -51,7 +85,7 @@ public:
 	 * Attention: Size will be ignored if vector is a fixed size type.
 	 * Attention: Data should have the correct size (elemCnt*sizeof(T))
 	 */
-	void init(size_t elemCnt, void* data = NULL){
+	void init(size_t elemCnt = 0, void* data = NULL){
 		if(v != NULL)
 			delete[] v;
 
@@ -130,7 +164,19 @@ public:
 	T getMin() {
 		return *std::min_element(v, v+cnt);
 	}
+	T getLength(){
+		double l = 0;
 
+		for(int i = 0; i < cnt; i++)
+			l += (*this)[i]*(*this)[i];
+		return sqrt(l);
+	}
+	void normalize(){
+		*this = *this * (1.0 / getLength());
+	}
+	Vector<T,COMPILE_SIZE> normalized(){
+		return *this * (1.0 / getLength());
+	}
 
 	////////////////////////////////////////
 	// Operator overloading

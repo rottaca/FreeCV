@@ -12,6 +12,7 @@
 #include "sstream"
 #include <typeinfo>
 #include "assert.h"
+#include <math.h>
 
 #include "FreeCV/Core/Logger.h"
 #include "FreeCV/Core/Vector.h"
@@ -34,9 +35,59 @@ public:
 		init(rows, cols, data);
 	}
 
+	Matrix(T a00){
+		initEmpty();
+		init();
+		for(int y = 0; y < rows; y++)
+			for(int x = 0; x < cols; x++)
+				at(y,x) = a00;
+
+	}
+	Matrix(T a00,T a01,T a10,T a11) {
+		initEmpty();
+		init();
+		at(0,0) = a00;
+		at(1,0) = a10;
+		at(0,1) = a01;
+		at(1,1) = a11;
+	}
+	Matrix(T a00,T a01,T a02,T a10,T a11,T a12,T a20,T a21,T a22) {
+		initEmpty();
+		init();
+		at(0,0) = a00;
+		at(0,1) = a01;
+		at(0,2) = a02;
+		at(1,0) = a10;
+		at(1,1) = a11;
+		at(1,2) = a12;
+		at(2,0) = a20;
+		at(2,1) = a21;
+		at(2,2) = a22;
+	}
+	Matrix(T a00,T a01,T a02,T a03,T a10,T a11,T a12,T a13,T a20,T a21,T a22,T a23,T a30,T a31,T a32,T a33) {
+		initEmpty();
+		init();
+		at(0,0) = a00;
+		at(0,1) = a01;
+		at(0,2) = a02;
+		at(0,3) = a03;
+		at(1,0) = a10;
+		at(1,1) = a11;
+		at(1,2) = a12;
+		at(1,3) = a13;
+		at(2,0) = a20;
+		at(2,1) = a21;
+		at(2,2) = a22;
+		at(2,3) = a23;
+		at(3,0) = a30;
+		at(3,1) = a31;
+		at(3,2) = a32;
+		at(3,3) = a33;
+	}
+
 	Matrix() {
 		initEmpty();
-		init(0, 0);
+		init();
 	}
 	/**
 	 * Copy Constructor
@@ -55,7 +106,7 @@ public:
 	 * Initializes the Matrix with a given size and optional data.
 	 * Size changes are ignored if matrix has a fixed size.
 	 */
-	void init(size_t rows, size_t cols, void* data = NULL) {
+	void init(size_t rows = 0, size_t cols = 0, void* data = NULL) {
 		if (m != NULL){
 			delete[] m;
 			m = NULL;
@@ -216,6 +267,59 @@ public:
 		}
 		return mat;
 	}
+	/**
+	 * Rotate the matrix around the given direction and by the given angle.
+	 * Coordinate system: X-Right, Y-IN, Z-UP
+	 */
+	void rotate(Vector<T, 3> rotAxis, T angle) {
+		// Code from: http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/
+
+		rotAxis.normalize();
+
+		double x = rotAxis[0];
+		double y = rotAxis[1];
+		double z = rotAxis[2];
+
+		double x2 = x * x;
+		double y2 = y * y;
+		double z2 = z * z;
+		double xy = x * y;
+		double yz = y * z;
+		double xz = x * z;
+
+		double _1_cos = 1-cos(angle);
+		double _cos = cos(angle);
+		double _sin = sin(angle);
+
+		Matrix<T, 4, 4> rotationMatrix;
+		rotationMatrix.setIdentity();
+
+		rotationMatrix.at(0,0) = x2*_1_cos + _cos;
+		rotationMatrix.at(0,1) = xy*_1_cos - z*_sin;
+		rotationMatrix.at(0,2) = xz*_1_cos + y*_sin;
+
+		rotationMatrix.at(1,0) = xy*_1_cos + z*_sin;;
+		rotationMatrix.at(1,1) = y2*_1_cos + _cos;
+		rotationMatrix.at(1,2) = yz*_1_cos - x*_sin;
+
+		rotationMatrix.at(2,0) = xz*_1_cos - y*_sin;
+		rotationMatrix.at(2,1) = yz*_1_cos + x*_sin;
+		rotationMatrix.at(2,2) = z2*_1_cos + _cos;
+
+		// Apply rotation
+		*this = rotationMatrix * (*this);
+	}
+	void translate(Vector<T, 3> Tr)
+	{
+		Matrix<T,4,4> translationMatrix;
+		translationMatrix.setIdentity();
+		translationMatrix.at(0,3) = Tr[0];
+		translationMatrix.at(1,3) = Tr[1];
+		translationMatrix.at(2,3) = Tr[2];
+
+		// Apply translation
+		*this = translationMatrix * (*this);
+	}
 
 	void setTransform(Matrix<T,3,3>R, Vector<T,3> TVec){
 
@@ -249,7 +353,7 @@ public:
 
 	Vector<T,COMPILE_ROWS> operator*(Vector<T, COMPILE_COLS> v2) {
 		assert(v2.getSize() == cols);
-		Vector<T,COMPILE_ROWS> nv(rows);
+		Vector<T,COMPILE_ROWS> nv;
 
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
@@ -270,6 +374,9 @@ public:
 			}
 		return nv;
 	}
+
+
+
 private:
 	/**
 	 * Initializes the matrix as empty matrix.

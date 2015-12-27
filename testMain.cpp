@@ -8,15 +8,33 @@
 #include "FreeCV/FreeCV.h"
 #include <iostream>
 #include <unistd.h>
+#include <limits.h>
 
-#define LOG_TEST_FKT_START(testName) LOG_INFO("Unit test ---------------- \033[32m" testName "\033[39m ----------------");
-#define LOG_TEST_FKT_END(testName, valid) LOG_FORMAT_INFO("Unit test ---------------- \033[32m%s \033[39m ----------------: %s", testName, valid?"\033[32m No Error!\033[39m ": "\033[31m Error! Test failed!\033[39m ");
-#define ERROR_IF_TEST_FAILED(res, testName) if(!res){LOG_TEST_FKT_END(testName, false);}
+#define LOG_TEST_FKT_START(testName) LOG_INFO("Unit test ---------------- \033[32m" testName "\033[39m ----------------"); std::string unitName=testName;
+#define LOG_TEST_FKT_END(valid){ LOG_FORMAT_INFO("Unit test ---------------- \033[32m%s \033[39m ----------------: %s", unitName.c_str(), valid?"\033[32m No Error!\033[39m ": "\033[31m Error! Test failed!\033[39m ");}
+#define LOG_TEST_SUB_FKT_END(testName, valid) LOG_FORMAT_INFO("%s ... %s", testName, valid?"\033[32m OK\033[39m ": "\033[31m FAILED\033[39m ");
+#define ERROR_IF_TEST_FAILED(res) if(!res){LOG_TEST_FKT_END(false);}
+
+#define TEST_MAT_COMPONENTWISE(SIZE_X, SIZE_Y, TEST_FKT)\
+	for (int y = 0; y < SIZE_Y; y++) {\
+			for (int x = 0; x < SIZE_X; x++) {\
+				if(!(TEST_FKT)){\
+					valid = false;\
+					break;\
+				}\
+			}\
+			if(!valid)\
+				break;\
+		}\
 
 // Forward declaration
+bool TestMatrix();
 bool TestSGM();
 
 int main(int argc, char **argv) {
+
+
+	TestMatrix();
 
 	TestSGM();
 
@@ -140,6 +158,47 @@ int main(int argc, char **argv) {
 //	}
 }
 
+bool TestMatrix()
+{
+	LOG_TEST_FKT_START("Matrix");
+
+	// TODO Add more tests
+	fcv::Matrix4x4f m1;
+	m1.setIdentity();
+	bool valid = true;
+	TEST_MAT_COMPONENTWISE(4,4,m1.at(y,x) == (y == x));
+	if(!valid){
+		LOG_TEST_SUB_FKT_END("Identity Matrix test", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	}else{
+		LOG_TEST_SUB_FKT_END("Identity Matrix test", true);
+	}
+
+	fcv::Vector3f axis(0.325271,0.354611,0.448501);
+	m1.rotate(axis, FCV_DEG2RAD(82.2648));
+	fcv::Matrix4x4f correctRotMat (
+			0.346197, -0.444925, 0.825948,0,
+			0.906303, 0.386092, -0.171896,0,
+			-0.242411, 0.808068, 0.536901,0,
+			0,0,0,1);
+
+//	LOG_FORMAT_INFO("%s", m1.toString().c_str());
+
+	valid = true;
+	TEST_MAT_COMPONENTWISE(4,4,fabs(m1.at(y,x)-correctRotMat.at(y,x)) <= 0.0001);
+	if (!valid) {
+		LOG_TEST_SUB_FKT_END("Rotation Matrix test", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	} else {
+		LOG_TEST_SUB_FKT_END("Rotation Matrix test", true);
+	}
+
+
+	LOG_TEST_FKT_END(true);
+	return true;
+}
 bool TestSGM(){
 	LOG_TEST_FKT_START("Semi global matching (SGM)");
 
@@ -147,11 +206,11 @@ bool TestSGM(){
 	fcv::Image imgR = fcv::ImageFileManager::loadImage("stereo_right_gray.pgm");
 
 	if(imgL.isValid() && imgR.isValid()){
-		LOG_INFO("Stereo images loaded");
+		LOG_TEST_SUB_FKT_END("Loading Stereo images", true);
 	}
 	else{
-		LOG_ERROR("Failed to load stereo images.");
-		LOG_TEST_FKT_END("Semi global matching (SGM)", false);
+		LOG_TEST_SUB_FKT_END("Loading Stereo images", false);
+		LOG_TEST_FKT_END(false);
 		return false;
 	}
 
@@ -200,6 +259,6 @@ bool TestSGM(){
 	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
 			fcv::ImageFileManager::PPM_BINARY);
 
-	LOG_TEST_FKT_END("Semi global matching (SGM)", true);
+	LOG_TEST_FKT_END(true);
 	return true;
 }
