@@ -161,32 +161,6 @@ void Image::crop(Rectangle roi, Image* orgImg) {
 
 }
 
-#ifdef WITH_QT
-	QImage Image::toQImage()
-	{
-		QImage::Format format;
-		switch (m_format) {
-		case PF_FLOAT_32:
-			LOG_ERROR("Qt does not support float images!");
-			return QImage();
-			break;
-		case PF_RGB_888:
-			format = QImage::Format_RGB888;
-			break;
-		case PF_GRAYSCALE_8:
-			format = QImage::Format_Grayscale8;
-			break;
-		case PF_YUYV:
-			LOG_ERROR("Qt does not support YUYV images!");
-			return QImage();
-			break;
-		default:
-			return QImage();
-			break;
-		}
-		return QImage(m_data, m_width, m_height, m_bytesPerPixel*m_width,format);
-	}
-#endif
 //Image& Image::operator= (const Image& other){
 //    if (this != &other) {
 //    	releaseData();

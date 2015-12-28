@@ -6,9 +6,15 @@ PROJECT(FreeCV)
 # - WithOpenMP (default: ON)
 # - WithQt (default: ON)
 
+######################################################################
+## Define Options
+######################################################################
 option(OPTION_WithOpenMP "WithOpenMP" ON)
 option(OPTION_WithQt "WithQt" ON)
 
+######################################################################
+## Check options
+######################################################################
 if(OPTION_WithOpenMP)
     FIND_PACKAGE(OpenMP)
     if(OPENMP_FOUND)
@@ -25,12 +31,16 @@ if(OPTION_WithQt)
     if(Qt5Widgets_FOUND)
         message(STATUS "QT found! Qt Interface available!")
         add_definitions(-DWITH_QT)
+        
+        
     else()
         message(WARNING "QT not found! Qt Interface not available!")
     endif()
 endif()
     
-
+######################################################################
+## Library source files
+######################################################################
 SET(SOURCE_FILES 
     src/Logger.cpp
     src/Vector.cpp
@@ -50,6 +60,9 @@ SET(SOURCE_FILES
     src/ExposureController.cpp
 )
 
+######################################################################
+## Library header files
+######################################################################
 SET(HEADER_FILES
     include/FreeCV/FreeCV.h
     
@@ -76,8 +89,20 @@ SET(HEADER_FILES
     include/FreeCV/IO/ExposureController.h
 )
 
+######################################################################
+## Add source files according to additional interfaces
+######################################################################
+if(Qt5Widgets_FOUND)
+    SET(QT_INTERFACE_FILES 
+        src/QtInterface.cpp
+    )
+endif()
 
-ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} )
+
+######################################################################
+## Add and link Library
+######################################################################
+ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${QT_INTERFACE_FILES})
 target_link_libraries(FreeCV  ${ADDITIONAL_LIBS})
 
 target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -92,6 +117,9 @@ if(Qt5Widgets_FOUND)
 endif()
 
 
+######################################################################
+## Print Build Summary
+######################################################################
 macro(PrintOptionResult optName optEnabled optFound)
     if(${optEnabled})
         if(${optFound})
@@ -112,7 +140,6 @@ PrintOptionResult("OpenMP" OPTION_WithOpenMP OPENMP_FOUND)
 PrintOptionResult("Qt" OPTION_WithQt Qt5Widgets_FOUND)
 message(STATUS "")
 message(STATUS "")
-
 
 
 #######################################################################
