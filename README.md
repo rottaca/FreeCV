@@ -22,6 +22,8 @@ Features:
   - Contains an implementation of the stereo matching algorithm "semi global matching (SGM)". It currently evaluates 8 instead of 16 paths but produces pretty results.
   - Contains a point cloud creator that converts disparity maps into 3D coordinates.
   - Point cloud creator can load and save .ply files that contains point coordinates and color.
+  - Added optional Qt Interface to convert images into QImages
+  - Added OpenMP support to SGM
   
   
 TODO's:
@@ -33,3 +35,4 @@ TODO's:
   - Implement CalibLoader, UndistortAndRectify, ProjectPoint, UnprojectPoint,...
   - Cuda Implementation of most features: ColorConvert, HoughTransform, Histogram calculation, Filtering, SGM,...
   - Add data structures like Kd-trees,...
+  - Add openCV Interface to convert matrices and images into cv::mat objects.
