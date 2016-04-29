@@ -21,11 +21,12 @@ Features:
   - Contains ImageFilters (currently: MedianFilter, GausFilter, generic ApplyKernel function)
   - Contains an implementation of the stereo matching algorithm "semi global matching (SGM)". It currently evaluates 8 instead of 16 paths but produces pretty results.
   - Contains a point cloud creator that converts disparity maps into 3D coordinates.
-  - Point cloud creator can load and save .ply files that contains point coordinates and color.
+  - Point cloud creator can load and save .ply files that contains point coordinates and color. 
+  - LU-Decomposition implemented.
   
   
 TODO's:
-  - Implement Matrix Invert (DecomposeLU)
+  - Implement Matrix Invert 
   - Implement Matrix Determinant
   - Implement ExposureControl for ManualCtrl (User supplies goal luminance and algorithm adjusts exposure).
   - Implement ImageTransform (Rotate, Scale, Translate)

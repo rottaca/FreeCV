@@ -5,12 +5,14 @@ PROJECT(FreeCV)
 # Avaialble switches are
 # - WithOpenMP (default: ON)
 # - WithQt (default: ON)
+# - WithCuda (default: ON)
 
 ######################################################################
 ## Define Options
 ######################################################################
 option(OPTION_WithOpenMP "WithOpenMP" ON)
 option(OPTION_WithQt "WithQt" ON)
+option(OPTION_WithCuda "WithCuda" ON)
 
 ######################################################################
 ## Check options
@@ -35,6 +37,17 @@ if(OPTION_WithQt)
         
     else()
         message(WARNING "QT not found! Qt Interface not available!")
+    endif()
+endif()
+    
+if(OPTION_WithCuda)
+    find_package(CUDA)
+    if(CUDA_FOUND)
+        message(STATUS "Cuda found! GPU-Support available!")
+        add_definitions(-DWITH_CUDA)
+        
+    else()
+        message(WARNING "Cuda not found! GPU-Support not available!")
     endif()
 endif()
     
@@ -98,11 +111,31 @@ if(Qt5Widgets_FOUND)
     )
 endif()
 
+if(CUDA_FOUND)
+    SET(CUDA_SOURCE_FILES 
+        src/GPUData.cpp
+    )
+    SET(CUDA_HEADER_FILES 
+        include/FreeCV/Cuda/Cuda.h
+        include/FreeCV/Cuda/CudaError.h
+        include/FreeCV/Cuda/GPUData.h
+    )
+    SET(CUDA_CU_FILES 
+
+    )
+endif()
+
 
 ######################################################################
 ## Add and link Library
 ######################################################################
-ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${QT_INTERFACE_FILES})
+##### FreeCV
+if(CUDA_FOUND)
+    CUDA_ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${QT_INTERFACE_FILES} ${CUDA_HEADER_FILES} ${CUDA_SOURCE_FILES} ${CUDA_CU_FILES})
+else()
+    ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${QT_INTERFACE_FILES})
+endif()
+
 target_link_libraries(FreeCV  ${ADDITIONAL_LIBS})
 
 target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -111,11 +144,15 @@ target_include_directories(FreeCV PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
     # Headers used from the installed location:
     "$<INSTALL_INTERFACE:include>"
 )
-
+##### QT
 if(Qt5Widgets_FOUND)
     qt5_use_modules(FreeCV Widgets)
 endif()
 
+##### Cuda
+if(CUDA_FOUND)
+    
+endif()
 
 ######################################################################
 ## Print Build Summary
@@ -125,7 +162,7 @@ macro(PrintOptionResult optName optEnabled optFound)
         if(${optFound})
           message(STATUS ${optName} ": ON - FOUND")
         else()
-          message(ERROR ${optName} ": ON - NOT FOUND!")
+          message(WARNING ${optName} ": ON - NOT FOUND!")
         endif()
     else()
       message(STATUS ${optName} ": OFF")
@@ -138,6 +175,7 @@ message(STATUS "")
 message(STATUS "-----------Summaray of FreeCV-Build-----------")
 PrintOptionResult("OpenMP" OPTION_WithOpenMP OPENMP_FOUND)
 PrintOptionResult("Qt" OPTION_WithQt Qt5Widgets_FOUND)
+PrintOptionResult("Cuda" OPTION_WithCuda CUDA_FOUND)
 message(STATUS "")
 message(STATUS "")
 

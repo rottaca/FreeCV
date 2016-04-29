@@ -140,24 +140,24 @@ public:
 	/**
 	 * Returns a pointer to the first entry of the specified row.
 	 */
-	inline T* getPtr(int y) const {
-		assert(y < rows && y>=0);
-		return &m[y * cols];
+	inline T* getPtr(int row) const {
+		assert(row < rows && row>=0);
+		return &m[row * cols];
 	}
 	/**
 	 * Returns a pointer to the specified matrix entry.
 	 */
-	inline T* getPtr(int y, int x) const {
-		assert(y < rows && x < cols && y >= 0 && x >= 0);
-		return &m[y * cols + x];
+	inline T* getPtr(int row, int col) const {
+		assert(row < rows && col < cols && row >= 0 && col >= 0);
+		return &m[row * cols + col];
 	}
 	/**
 	 * Returns a reference to the specified matrix entry.
 	 * Attention no range check!
 	 */
-	T& at(int y, int x) {
-		assert(y < rows && x < cols && y >= 0 && x >= 0);
-		return m[y * cols + x];
+	T& at(int row, int col) {
+		assert(row < rows && col < cols && row >= 0 && col >= 0);
+		return m[row * cols + col];
 	}
 
 	/**
@@ -228,23 +228,57 @@ public:
 				 + at(0, 2) *(at(1,0)*at(2,1) - at(1,1)*at(2,0));
 		} else {
 			// TODO not implemented!
+			LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
 			return 0;
 		}
 
 	}
+	/**
+	 * Decomposes the Matrix into a lower and upper triangle matrix where L*R=A.
+	 */
+	bool decomposeLU(Matrix<T,COMPILE_ROWS,COMPILE_COLS>& R,Matrix<T,COMPILE_ROWS,COMPILE_COLS>& U){
+		assert(cols == rows);
+
+		R = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(*this);
+		U = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(rows,cols);
+
+		// Init Lower left matrix. Zeros at the top right triangle.
+		for (int c = 0; c < cols; c++) {
+			for (int r = 0; r < c+1; r++) {
+				if(r == c)
+					U.at(r, c) = 1;
+				else
+					U.at(r, c) = 0;
+			}
+		}
+
+		// Calculate upper right triangle matrix by eliminating all values in the lower left triangle matrix
+		// Calculate lower left triangle matrix
+		// For each column
+		for(int c = 0; c < cols; c++){
+			T r1 = R.at(c,c);// Get Entry on diagonal
+			// For each row, calculate the coefficient l
+			for(int r = c+1; r < rows; r++){
+				U.at(r,c) = R.at(r,c)/r1;
+				// For each entry in the current row, update the values
+				for(int c2 = c; c2 < cols; c2++){
+					R.at(r,c2) -= R.at(c,c2)*U.at(r,c);
+				}
+			}
+		}
+
+		return true;
+	}
+
 
 	Matrix<T,COMPILE_ROWS, COMPILE_COLS> inverse(){
 		Matrix<T,COMPILE_ROWS, COMPILE_COLS> inv;
 		LOG_ERROR("Inverse Matrix not implemented yet!");
 		return inv;
 		assert(rows == cols);
-		if(rows == 2){
 
-		}else if(rows == 3){
 
-		}else{
-			LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
-		}
+		LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
 
 		return inv;
 	}

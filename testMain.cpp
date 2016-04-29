@@ -31,6 +31,12 @@
 bool TestMatrix();
 bool TestSGM();
 
+
+#ifdef WITH_CUDA
+#include "FreeCV/Cuda/Cuda.h"
+bool TestCuda();
+#endif
+
 int main(int argc, char **argv) {
 
 	LOG_INFO("############################################################################\n"
@@ -39,7 +45,11 @@ int main(int argc, char **argv) {
 			 "############################################################################\n");
 
 	TestMatrix();
-	TestSGM();
+//	TestSGM();
+
+#ifdef WITH_CUDA
+	TestCuda();
+#endif
 
 //	fcv::Image img3 = fcv::ImageFileManager::loadImage("lena1.pgm");
 //	fcv::Image img5 = fcv::ImageFileManager::loadImage("equalized.pgm");
@@ -199,6 +209,36 @@ bool TestMatrix()
 	}
 
 
+	fcv::Matrix3x3f m44(0),m44Tmp;
+	fcv::Matrix3x3f R,U;
+
+	m44.at(0,0) = 1;
+	m44.at(0,1) = 2;
+	m44.at(0,2) = 4;
+	m44.at(1,0) = 3;
+	m44.at(1,1) = 8;
+	m44.at(1,2) = 14;
+	m44.at(2,0) = 2;
+	m44.at(2,1) = 6;
+	m44.at(2,2) = 13;
+
+	m44.decomposeLU(R,U);
+
+	LOG_FORMAT_INFO("R: %s",R.toString().c_str());
+	LOG_FORMAT_INFO("U: %s",U.toString().c_str());
+	m44Tmp = U*R;
+	LOG_FORMAT_INFO("%s",m44Tmp.toString().c_str());
+
+	valid = true;
+	TEST_MAT_COMPONENTWISE(4,4,fabs(m44.at(y,x)-m44Tmp.at(y,x)) <= 0.0001);
+	if (!valid) {
+		LOG_TEST_SUB_FKT_END("DecomposeLR Matrix test", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	} else {
+		LOG_TEST_SUB_FKT_END("DecomposeLR Matrix test", true);
+	}
+
 	LOG_TEST_FKT_END(true);
 	return true;
 }
@@ -265,3 +305,38 @@ bool TestSGM(){
 	LOG_TEST_FKT_END(true);
 	return true;
 }
+#ifdef WITH_CUDA
+bool TestCuda()
+{
+	LOG_TEST_FKT_START("Cuda GPU-Support");
+	fcv::GPUData gpuData;
+	int arr[100];
+	int arr2[100];
+	for(int i = 0; i < 100; i++)
+	{
+		arr[i] = i;
+	}
+
+	gpuData.uploadData(sizeof(int)*100,&arr);
+	gpuData.downloadData(&arr2);
+	bool valid = true;
+	for(int i = 0; i < 100; i++)
+	{
+		if(arr2[i] != arr[i]){
+			valid = false;
+			break;
+		}
+	}
+
+	if(valid){
+		LOG_TEST_SUB_FKT_END("Upload and download data", true);
+	}
+	else{
+		LOG_TEST_SUB_FKT_END("Upload and download data", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	}
+
+	LOG_TEST_FKT_END(true);
+}
+#endif

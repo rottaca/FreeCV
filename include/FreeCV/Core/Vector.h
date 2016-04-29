@@ -49,7 +49,8 @@ public:
 		v = NULL;
 		cnt = 0;
 		init();
-		v[0] = v0;
+		for(int i = 0; i < cnt; i++)
+			v[i] = v0;
 	}
 	Vector(T v0,T v1){
 		v = NULL;
@@ -155,16 +156,16 @@ public:
     /**
      * Returns the maximum value in the vector
      */
-	T getMax() {
+	T getMax() const {
 		return *std::max_element(v, v+cnt);
 	}
     /**
      * Returns the minimum value in the vector
      */
-	T getMin() {
+	T getMin() const {
 		return *std::min_element(v, v+cnt);
 	}
-	T getLength(){
+	T getLength() const{
 		double l = 0;
 
 		for(int i = 0; i < cnt; i++)
@@ -174,8 +175,8 @@ public:
 	void normalize(){
 		*this = *this * (1.0 / getLength());
 	}
-	Vector<T,COMPILE_SIZE> normalized(){
-		return *this * (1.0 / getLength());
+	Vector<T,COMPILE_SIZE> normalized()const{
+		return Vector(*this * (1.0 / getLength()));
 	}
 
 	////////////////////////////////////////
@@ -187,22 +188,56 @@ public:
 
     	return v[i];
     }
+    const T& operator[](size_t i) const{
+    	assert(i< cnt);
 
-    Vector<T,COMPILE_SIZE> operator=(const Vector<T,COMPILE_SIZE>& v2){
+    	return v[i];
+    }
+
+    Vector<T,COMPILE_SIZE>& operator=(const Vector<T,COMPILE_SIZE>& v2){
     	init(v2.getSize(),v2.v);
     	return *this;
     }
 
-    Vector<T,COMPILE_SIZE> operator+(Vector<T,COMPILE_SIZE>& v2)
+    Vector<T,COMPILE_SIZE> operator+(const Vector<T,COMPILE_SIZE>& v2) const
     {
     	assert(v2.getSize() == cnt);
     	Vector<T,COMPILE_SIZE> nv(*this);
     	for(int i = 0; i < cnt;i++)
-    		nv[i] += v2[i];
+    		nv[i] += v2.get(i);
+    	return nv;
+    }
+    Vector<T,COMPILE_SIZE>& operator+=(const Vector<T,COMPILE_SIZE>& v2)
+    {
+    	assert(v2.getSize() == cnt);
+    	for(int i = 0; i < cnt;i++)
+    		v[i] += v2.get(i);
+    	return *this;
+    }
+    Vector<T,COMPILE_SIZE> operator-(const Vector<T,COMPILE_SIZE>& v2) const
+    {
+    	assert(v2.getSize() == cnt);
+    	Vector<T,COMPILE_SIZE> nv(*this);
+    	for(int i = 0; i < cnt;i++)
+    		nv[i] -= v2.get(i);
+    	return nv;
+    }
+    Vector<T,COMPILE_SIZE>& operator-=(const Vector<T,COMPILE_SIZE>& v2)
+    {
+    	assert(v2.getSize() == cnt);
+    	for(int i = 0; i < cnt;i++)
+    		v[i] -= v2.get(i);
+    	return *this;
+    }
+    Vector<T,COMPILE_SIZE> operator-()
+    {
+    	Vector<T,COMPILE_SIZE> nv;
+    	for(int i = 0; i < cnt;i++)
+    		nv[i] = -v[i];
     	return nv;
     }
 
-    Vector<T,COMPILE_SIZE> operator*(T s)
+    Vector<T,COMPILE_SIZE> operator*(const T& s) const
     {
     	Vector<T,COMPILE_SIZE> nv(*this);
     	for(int i = 0; i < cnt;i++){
@@ -211,30 +246,67 @@ public:
     	return nv;
     }
 
-    /**
-     * Scalar product
-     */
-    T operator*(Vector<T,COMPILE_SIZE> v2)
+    Vector<T,COMPILE_SIZE> operator/(const T& s) const
+    {
+    	Vector<T,COMPILE_SIZE> nv(*this);
+    	for(int i = 0; i < cnt;i++){
+    		nv[i] /= s;
+    	}
+    	return nv;
+    }
+
+    Vector<T,COMPILE_SIZE> operator*(const Vector<T,COMPILE_SIZE>& v2) const
     {
     	assert(v2.getSize() == getSize());
-    	T val = 0;
+    	Vector<T,COMPILE_SIZE> vNew(*this);
+
     	for(int i = 0; i < getSize();i++){
-    		val += get(i)*v2.get(i);
+    		vNew[i] *= v2.get(i);
     	}
-    	return val;
+    	return vNew;
+    }
+    Vector<T,COMPILE_SIZE>& operator*=(const Vector<T,COMPILE_SIZE>& v2)
+    {
+    	assert(v2.getSize() == getSize());
+    	Vector<T,COMPILE_SIZE> vNew(*this);
+
+    	for(int i = 0; i < getSize();i++){
+    		v[i] *= v2.get(i);
+    	}
+    	return *this;
+    }
+    Vector<T,COMPILE_SIZE>& operator/=(const Vector<T,COMPILE_SIZE>& v2)
+    {
+    	assert(v2.getSize() == getSize());
+    	Vector<T,COMPILE_SIZE> vNew(*this);
+
+    	for(int i = 0; i < getSize();i++){
+    		v[i] /= v2.get(i);
+    	}
+    	return *this;
     }
 
     /**
      * Scalar product
      */
-    T dot(Vector<T,COMPILE_SIZE> v2)
+    T dot(const Vector<T,COMPILE_SIZE> v2)
     {
-    	return operator *(v2);
+		T val = 0;
+		for (int i = 0; i < getSize(); i++) {
+			val += v[i] * v2[i];
+		}
+		return val;
     }
 
     Vector<T,COMPILE_SIZE> cross(Vector<T,COMPILE_SIZE> v2){
+    	assert(v2.getSize() == 3);
+    	assert(getSize() == 3);
+
     	 Vector<T,COMPILE_SIZE> vn;
-    	 LOG_ERROR("Cross product not implemented yet!");
+    	 vn[0] = v[1]*v2[2] - v[2]*v2[1];
+    	 vn[1] = v[2]*v2[0] - v[0]*v2[2];
+    	 vn[2] = v[0]*v2[1] - v[1]*v2[0];
+
     	return vn;
     }
 
