@@ -14,6 +14,7 @@
 #include "FreeCV/Core/Matrix.h"
 #include "FreeCV/Core/Vector.h"
 #include "FreeCV/Core/Rectangle.h"
+#include "FreeCV/Core/Math.h"
 
 #include "FreeCV/Image/Filter.h"
 #include "FreeCV/Image/Histogram.h"

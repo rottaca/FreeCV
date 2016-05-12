@@ -71,6 +71,7 @@ SET(SOURCE_FILES
     src/UndistortAndRectify.cpp
     src/CalibLoader.cpp
     src/ExposureController.cpp
+    src/Math.cpp
 )
 
 ######################################################################
@@ -85,6 +86,7 @@ SET(HEADER_FILES
     include/FreeCV/Core/Matrix.h
     include/FreeCV/Core/Vector.h
     include/FreeCV/Core/Rectangle.h
+    include/FreeCV/Core/Math.h
     
     include/FreeCV/Image/Image.h
     include/FreeCV/Image/ImageFileManager.h

@@ -234,21 +234,21 @@ public:
 
 	}
 	/**
-	 * Decomposes the Matrix into a lower and upper triangle matrix where L*R=A.
+	 * Decomposes the Matrix into a lower and upper triangle matrix (Doolittle factorization) where L*R=A.
 	 */
-	bool decomposeLU(Matrix<T,COMPILE_ROWS,COMPILE_COLS>& R,Matrix<T,COMPILE_ROWS,COMPILE_COLS>& U){
+	bool decomposeLU(Matrix<T,COMPILE_ROWS,COMPILE_COLS>& L,Matrix<T,COMPILE_ROWS,COMPILE_COLS>& U){
 		assert(cols == rows);
 
-		R = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(*this);
-		U = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(rows,cols);
+		U = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(*this);
+		L = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(rows,cols);
 
 		// Init Lower left matrix. Zeros at the top right triangle.
 		for (int c = 0; c < cols; c++) {
 			for (int r = 0; r < c+1; r++) {
 				if(r == c)
-					U.at(r, c) = 1;
+					L.at(r, c) = 1;
 				else
-					U.at(r, c) = 0;
+					L.at(r, c) = 0;
 			}
 		}
 
@@ -256,13 +256,15 @@ public:
 		// Calculate lower left triangle matrix
 		// For each column
 		for(int c = 0; c < cols; c++){
-			T r1 = R.at(c,c);// Get Entry on diagonal
+			T r1 = U.at(c,c);// Get Entry on diagonal
+			if(r1 == 0)
+				return false;
 			// For each row, calculate the coefficient l
 			for(int r = c+1; r < rows; r++){
-				U.at(r,c) = R.at(r,c)/r1;
+				L.at(r,c) = U.at(r,c)/r1;
 				// For each entry in the current row, update the values
 				for(int c2 = c; c2 < cols; c2++){
-					R.at(r,c2) -= R.at(c,c2)*U.at(r,c);
+					U.at(r,c2) -= U.at(c,c2)*L.at(r,c);
 				}
 			}
 		}
@@ -273,12 +275,15 @@ public:
 
 	Matrix<T,COMPILE_ROWS, COMPILE_COLS> inverse(){
 		Matrix<T,COMPILE_ROWS, COMPILE_COLS> inv;
-		LOG_ERROR("Inverse Matrix not implemented yet!");
-		return inv;
+//		LOG_ERROR("Inverse Matrix not implemented yet!");
+//		return inv;
 		assert(rows == cols);
 
+		Matrix<T,COMPILE_ROWS, COMPILE_COLS> L,U;
+		decomposeLU(L,U);
 
-		LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
+
+//		LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
 
 		return inv;
 	}
