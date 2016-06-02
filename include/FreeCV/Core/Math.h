@@ -78,7 +78,7 @@ bool decomposeLU(const Matrix<T,COMPILE_ROWS,COMPILE_COLS>& A,
 }
 
 template<typename T, size_t COMPILE_ROWS, size_t COMPILE_COLS>
-bool solve(const Matrix<T,COMPILE_ROWS,COMPILE_COLS>& A, const Vector<T,COMPILE_COLS>& b,Vector<T,COMPILE_COLS>& x)
+bool solveLU(const Matrix<T,COMPILE_ROWS,COMPILE_COLS>& A, const Vector<T,COMPILE_COLS>& b,Vector<T,COMPILE_COLS>& x)
 {
 	assert(A.getRows() == A.getCols());
 	assert(A.getCols() == x.getSize());
@@ -116,6 +116,45 @@ bool solve(const Matrix<T,COMPILE_ROWS,COMPILE_COLS>& A, const Vector<T,COMPILE_
 		}
 
 		x[i] /= LU.at(i,i);
+	}
+	return true;
+}
+
+/**
+ * Decomposes the symetric positive definite Matrix A into a L*L^T.
+ */
+template<typename T, size_t COMPILE_ROWS, size_t COMPILE_COLS>
+bool decomposeCholesky(const Matrix<T,COMPILE_ROWS,COMPILE_COLS>& A,
+		Matrix<T,COMPILE_ROWS,COMPILE_COLS>& L){
+	assert(A.getCols() == A.getRows());
+
+	int n = A.getCols();
+	L = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(n,n);
+
+	// For each column
+	for(int k=0;k<n;k++)
+	{
+		L.at(k, k) = A.at(k, k);
+
+		for (int j = 0; j < k; j++)
+			L.at(k, k) -= L.at(k, j) * L.at(k, j);
+
+		if (L.at(k, k) < 0)
+			return false;
+
+		L.at(k, k) = sqrt(L.at(k, k));
+
+		// For each row from k+1 to n calculate other elements
+		for (int i = k + 1; i < n; i++) {
+			L.at(i, k) = A.at(i, k);
+
+			for (int j = 0; j < k; j++) {
+				L.at(i, k) -= L.at(i, j) * L.at(k,j);
+			}
+
+			L.at(i, k) /= L.at(k, k);
+
+		}
 	}
 	return true;
 }

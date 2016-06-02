@@ -161,6 +161,15 @@ public:
 	}
 
 	/**
+	 * Returns a const reference to the specified matrix entry.
+	 * Attention no range check!
+	 */
+	const T& at(int row, int col) const{
+		assert(row < rows && col < cols && row >= 0 && col >= 0);
+		return m[row * cols + col];
+	}
+
+	/**
 	 * Returns column count
 	 */
 	size_t getCols() const {

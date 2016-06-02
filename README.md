@@ -26,6 +26,7 @@ Features:
   - Added optional Qt Interface to convert images into QImages
   - Added OpenMP support to SGM
   - LU-Decomposition with column pivoing implemented.
+  - Cholesky-Decomposition implemented.
   
   
 TODO's:

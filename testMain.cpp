@@ -273,7 +273,7 @@ bool TestMath()
 		LOG_TEST_SUB_FKT_END("DecomposeLU test", true);
 	}
 
-	fcv::solve(m33,b,x);
+	fcv::solveLU(m33,b,x);
 
 	if (fabs(x[0] - (-1))> 0.0001 || fabs(x[1] - (-4))> 0.0001 || fabs(x[2] - 3)> 0.0001) {
 		LOG_TEST_SUB_FKT_END("Solve Ax=b test", false);
@@ -282,6 +282,30 @@ bool TestMath()
 	} else {
 		LOG_TEST_SUB_FKT_END("Solve Ax=b test", true);
 	}
+
+	m33.at(0,0) = 25;
+	m33.at(0,1) = 15;
+	m33.at(0,2) = -5;
+	m33.at(1,0) = 15;
+	m33.at(1,1) = 18;
+	m33.at(1,2) = 0;
+	m33.at(2,0) = -5;
+	m33.at(2,1) = 0;
+	m33.at(2,2) = 11;
+	fcv::decomposeCholesky(m33,L);
+	fcv::Matrix3x3f L_t = L.transpose();
+	m33Tmp = L*L_t;
+
+	valid = true;
+	TEST_MAT_COMPONENTWISE(3,3,fabs(m33.at(y,x)-m33Tmp.at(y,x)) <= 0.0001);
+	if (!valid) {
+		LOG_TEST_SUB_FKT_END("DecomposeCholesky test", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	} else {
+		LOG_TEST_SUB_FKT_END("DecomposeCholesky test", true);
+	}
+
 
 	LOG_TEST_FKT_END(true);
 	return true;
