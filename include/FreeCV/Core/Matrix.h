@@ -233,44 +233,6 @@ public:
 		}
 
 	}
-	/**
-	 * Decomposes the Matrix into a lower and upper triangle matrix (Doolittle factorization) where L*R=A.
-	 */
-	bool decomposeLU(Matrix<T,COMPILE_ROWS,COMPILE_COLS>& L,Matrix<T,COMPILE_ROWS,COMPILE_COLS>& U){
-		assert(cols == rows);
-
-		U = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(*this);
-		L = Matrix<T,COMPILE_ROWS,COMPILE_COLS>(rows,cols);
-
-		// Init Lower left matrix. Zeros at the top right triangle.
-		for (int c = 0; c < cols; c++) {
-			for (int r = 0; r < c+1; r++) {
-				if(r == c)
-					L.at(r, c) = 1;
-				else
-					L.at(r, c) = 0;
-			}
-		}
-
-		// Calculate upper right triangle matrix by eliminating all values in the lower left triangle matrix
-		// Calculate lower left triangle matrix
-		// For each column
-		for(int c = 0; c < cols; c++){
-			T r1 = U.at(c,c);// Get Entry on diagonal
-			if(r1 == 0)
-				return false;
-			// For each row, calculate the coefficient l
-			for(int r = c+1; r < rows; r++){
-				L.at(r,c) = U.at(r,c)/r1;
-				// For each entry in the current row, update the values
-				for(int c2 = c; c2 < cols; c2++){
-					U.at(r,c2) -= U.at(c,c2)*L.at(r,c);
-				}
-			}
-		}
-
-		return true;
-	}
 
 
 	Matrix<T,COMPILE_ROWS, COMPILE_COLS> inverse(){

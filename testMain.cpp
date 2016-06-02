@@ -211,35 +211,6 @@ bool TestMatrix()
 	}
 
 
-	fcv::Matrix3x3f m33(0),m44Tmp;
-	fcv::Matrix3x3f L,U;
-
-	m33.at(0,0) = 1;
-	m33.at(0,1) = 2;
-	m33.at(0,2) = 4;
-	m33.at(1,0) = 3;
-	m33.at(1,1) = 8;
-	m33.at(1,2) = 14;
-	m33.at(2,0) = 2;
-	m33.at(2,1) = 6;
-	m33.at(2,2) = 13;
-
-	m33.decomposeLU(L,U);
-
-//	LOG_FORMAT_INFO("L: %s",L.toString().c_str());
-//	LOG_FORMAT_INFO("U: %s",U.toString().c_str());
-	m44Tmp = L*U;
-//	LOG_FORMAT_INFO("%s",m44Tmp.toString().c_str());
-
-	valid = true;
-	TEST_MAT_COMPONENTWISE(3,3,fabs(m33.at(y,x)-m44Tmp.at(y,x)) <= 0.0001);
-	if (!valid) {
-		LOG_TEST_SUB_FKT_END("DecomposeLR Matrix test", false);
-		LOG_TEST_FKT_END(false);
-		return false;
-	} else {
-		LOG_TEST_SUB_FKT_END("DecomposeLR Matrix test", true);
-	}
 
 	LOG_TEST_FKT_END(true);
 	return true;
@@ -248,8 +219,8 @@ bool TestMath()
 {
 	LOG_TEST_FKT_START("Math");
 
-	fcv::Matrix3x3f m33(0),m44Tmp;
-	fcv::Matrix3x3f L,U;
+	fcv::Matrix3x3f m33(0),m33Tmp;
+	fcv::Matrix3x3f L,U,LU,P;
 
 	m33.at(0,0) = -1;
 	m33.at(0,1) = 1;
@@ -266,9 +237,45 @@ bool TestMath()
 	b[1] = 5;
 	b[2] = 3;
 
+	fcv::decomposeLU(m33,LU,P);
+	// Extract L and U in single matrices
+	for(int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++) {
+			if(i==j){
+				L.at(i,j) = 1;
+				U.at(i,j) = LU.at(i,j);
+			}
+			else if(j>i) {
+				L.at(i,j) = 0;
+				U.at(i,j) = LU.at(i,j);
+			}
+			else
+			{
+				L.at(i,j) = LU.at(i,j);
+				U.at(i,j) = 0;
+			}
+		}
+	}
+//	LOG_FORMAT_INFO("L: %s",L.toString().c_str());
+//	LOG_FORMAT_INFO("U: %s",U.toString().c_str());
+	// A = P⁻1*L*U;
+	m33Tmp = P.transpose()*L*U;
+//	LOG_FORMAT_INFO("%s",m44Tmp.toString().c_str());
+
+	bool valid = true;
+	TEST_MAT_COMPONENTWISE(3,3,fabs(m33.at(y,x)-m33Tmp.at(y,x)) <= 0.0001);
+	if (!valid) {
+		LOG_TEST_SUB_FKT_END("DecomposeLU test", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	} else {
+		LOG_TEST_SUB_FKT_END("DecomposeLU test", true);
+	}
+
 	fcv::solve(m33,b,x);
 
-	if (x[0] != -1 || x[1] != -4 || x[2] != 3) {
+	if (fabs(x[0] - (-1))> 0.0001 || fabs(x[1] - (-4))> 0.0001 || fabs(x[2] - 3)> 0.0001) {
 		LOG_TEST_SUB_FKT_END("Solve Ax=b test", false);
 		LOG_TEST_FKT_END(false);
 		return false;

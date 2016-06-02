@@ -25,7 +25,7 @@ Features:
   - Point cloud creator can load and save .ply files that contains point coordinates and color.
   - Added optional Qt Interface to convert images into QImages
   - Added OpenMP support to SGM
-  - LU-Decomposition implemented.
+  - LU-Decomposition with column pivoing implemented.
   
   
 TODO's:
