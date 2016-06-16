@@ -5,7 +5,7 @@
  *      Author: andreas
  */
 
-#include "FreeCV/IO/ExposureController.h"
+#include "FreeCV/Linux/ExposureController.h"
 
 namespace fcv {
 

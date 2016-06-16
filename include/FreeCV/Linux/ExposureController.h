@@ -8,7 +8,7 @@
 #ifndef FREECV_INCLUDE_FREECV_IO_EXPOSURECONTROLLER_H_
 #define FREECV_INCLUDE_FREECV_IO_EXPOSURECONTROLLER_H_
 
-#include "FreeCV/IO/VideoCapture.h"
+#include "FreeCV/Linux/VideoCapture.h"
 #include "FreeCV/Image/Image.h"
 namespace fcv {
 

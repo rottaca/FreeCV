@@ -65,12 +65,10 @@ SET(SOURCE_FILES
     src/Histogram.cpp
     src/Transform.cpp
     src/SGM.cpp
-    src/VideoCapture.cpp
     src/ColorConvert.cpp
     src/PointCloudCreator.cpp
     src/UndistortAndRectify.cpp
     src/CalibLoader.cpp
-    src/ExposureController.cpp
     src/Math.cpp
 )
 
@@ -100,15 +98,43 @@ SET(HEADER_FILES
     include/FreeCV/Stereo/UndistortAndRectify.h
     include/FreeCV/Stereo/CalibLoader.h
     
-    include/FreeCV/IO/VideoCapture.h
-    include/FreeCV/IO/ExposureController.h
 )
+
+######################################################################
+## Add source files according to operating system
+######################################################################
+# Linux
+if (UNIX)
+    MESSAGE(STATUS "Linux detected! Enable v4l2 grabber and exposure controller.")
+    LIST( APPEND HEADER_FILES
+        include/FreeCV/Linux/VideoCapture.h
+        include/FreeCV/Linux/ExposureController.h
+        )
+        
+    LIST( APPEND SOURCE_FILES
+        src/ExposureController.cpp
+        src/VideoCapture.cpp
+        )
+endif (UNIX)
+# Windows
+if (WIN32) 
+    MESSAGE(STATUS "Windows detected.! Disable v4l2 grabber and exposure controller.")
+
+    LIST( APPEND HEADER_FILES
+        include/FreeCV/Windows/Time.h
+        include/FreeCV/Windows/Times.h
+        )
+        
+    LIST( APPEND SOURCE_FILES
+        src/Times.cpp
+        )
+endif (WIN32)
 
 ######################################################################
 ## Add source files according to additional interfaces
 ######################################################################
 if(Qt5Widgets_FOUND)
-    SET(QT_INTERFACE_FILES 
+    LIST( APPEND SOURCE_FILES
         src/QtInterface.cpp
     )
 endif()
@@ -133,9 +159,9 @@ endif()
 ######################################################################
 ##### FreeCV
 if(CUDA_FOUND)
-    CUDA_ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${QT_INTERFACE_FILES} ${CUDA_HEADER_FILES} ${CUDA_SOURCE_FILES} ${CUDA_CU_FILES})
+    CUDA_ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${CUDA_HEADER_FILES} ${CUDA_SOURCE_FILES} ${CUDA_CU_FILES})
 else()
-    ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES} ${QT_INTERFACE_FILES})
+    ADD_LIBRARY(FreeCV ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
 target_link_libraries(FreeCV  ${ADDITIONAL_LIBS})
@@ -164,7 +190,7 @@ macro(PrintOptionResult optName optEnabled optFound)
         if(${optFound})
           message(STATUS ${optName} ": ON - FOUND")
         else()
-          message(WARNING ${optName} ": ON - NOT FOUND!")
+          message(STATUS ${optName} ": ON - NOT FOUND!")
         endif()
     else()
       message(STATUS ${optName} ": OFF")

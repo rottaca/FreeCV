@@ -1,4 +1,4 @@
-#include "FreeCV/IO/VideoCapture.h"
+#include "FreeCV/Linux/VideoCapture.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>

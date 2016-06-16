@@ -27,7 +27,15 @@
 #include "FreeCV/Stereo/PointCloudCreator.h"
 #include "FreeCV/Stereo/UndistortAndRectify.h"
 
-#include "FreeCV/IO/VideoCapture.h"
-#include "FreeCV/IO/ExposureController.h"
+// Linux headers
+#ifdef __linux__
+	#include "FreeCV/Linux/VideoCapture.h"
+	#include "FreeCV/Linux/ExposureController.h"
+#endif
+
+// Windows headers
+#ifdef _WIN32
+	#include "FreeCV/Windows/times.h"
+#endif
 
 #endif /* FREECV_H_ */

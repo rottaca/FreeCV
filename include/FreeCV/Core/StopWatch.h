@@ -9,7 +9,12 @@
 #define FREECV_INCLUDE_FREECV_CORE_STOPWATCH_H_
 #include <iostream>
 #include <string.h>
-#include <sys/time.h>
+#ifdef _WIN32
+	#include "FreeCV/Windows/time.h"
+#else
+	#include <sys/time.h>
+#endif
+
 #include "FreeCV/Core/Logger.h"
 
 namespace fcv {
