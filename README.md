@@ -27,10 +27,10 @@ Features:
   - Added OpenMP support to SGM
   - LU-Decomposition with column pivoing implemented.
   - Cholesky-Decomposition implemented.
+  - Matrix invert with LU decomposition implemented.
   
   
 TODO's:
-  - Implement Matrix Invert (DecomposeLU)
   - Implement Matrix Determinant
   - Implement ExposureControl for ManualCtrl (User supplies goal luminance and algorithm adjusts exposure).
   - Implement ImageTransform (Rotate, Scale, Translate)

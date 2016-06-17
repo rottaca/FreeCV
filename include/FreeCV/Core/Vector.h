@@ -45,12 +45,11 @@ public:
 	}
 
 	// Constructs for different sized vectors
-	Vector(T v0){
+	Vector(T s){
 		v = NULL;
 		cnt = 0;
-		init();
-		for(int i = 0; i < cnt; i++)
-			v[i] = v0;
+		init(s);
+
 	}
 	Vector(T v0,T v1){
 		v = NULL;
@@ -318,7 +317,7 @@ private:
 
 };
 
-
+// Define some vector types with fixed size and type
 typedef Vector<unsigned char,FCV_DYNAMIC_SIZE> Vectorb;
 typedef Vector<float,FCV_DYNAMIC_SIZE> Vectorf;
 typedef Vector<int,FCV_DYNAMIC_SIZE> Vectori;

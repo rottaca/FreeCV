@@ -283,6 +283,20 @@ bool TestMath()
 		LOG_TEST_SUB_FKT_END("Solve Ax=b test", true);
 	}
 
+
+	fcv::Matrix3x3f m33Inv;
+	m33Inv = m33.inverse();
+	m33Tmp = m33*m33Inv;
+
+	TEST_MAT_COMPONENTWISE(3,3,fabs(m33Tmp.at(y,x)-(int)(x==y)) <= 0.0001);
+	if (!valid) {
+		LOG_TEST_SUB_FKT_END("Invert matrix test", false);
+		LOG_TEST_FKT_END(false);
+		return false;
+	} else {
+		LOG_TEST_SUB_FKT_END("Invert matrix test", true);
+	}
+
 	m33.at(0,0) = 25;
 	m33.at(0,1) = 15;
 	m33.at(0,2) = -5;

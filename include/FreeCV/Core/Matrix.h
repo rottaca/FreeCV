@@ -237,24 +237,57 @@ public:
 				 + at(0, 2) *(at(1,0)*at(2,1) - at(1,1)*at(2,0));
 		} else {
 			// TODO not implemented!
-			LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
+			LOG_FORMAT_ERROR("Determinat not implemented for %dx%d Matrix",rows,rows);
 			return 0;
 		}
-
 	}
 
 
 	Matrix<T,COMPILE_ROWS, COMPILE_COLS> inverse(){
-		Matrix<T,COMPILE_ROWS, COMPILE_COLS> inv;
-//		LOG_ERROR("Inverse Matrix not implemented yet!");
-//		return inv;
+
 		assert(rows == cols);
+		size_t n = getCols();
 
-		Matrix<T,COMPILE_ROWS, COMPILE_COLS> L,U;
-		decomposeLU(L,U);
+		Matrix<T,COMPILE_ROWS, COMPILE_COLS> inv(n,n);
+		Matrix<T,COMPILE_ROWS,COMPILE_COLS> LU,P;
+
+		if(!decomposeLU(*this,LU,P))
+			return false;
+		// Calculating the inverse matrix by solving n linear equation systems
+		// with Ax = b, for x = each col of Inv, b = vector with b(col) = 1
+
+		for(int j = 0; j < n; j++)
+		{
+			Vector<T,COMPILE_COLS> b(n);
+			b[j] = 1;
+			b = P*b;
+
+			// Solve Ly = b
+			Vector<T,COMPILE_COLS> y(n);
+			for(int i=0; i < n;i++)
+			{
+				y[i] = b[i];
+				for(int j2=0; j2 < i; j2++){
+					if(i == j2)
+						y[i] -= y[j2];
+					else
+						y[i] -= LU.at(i,j2)*y[j2];
+				}
+			}
 
 
-//		LOG_FORMAT_ERROR("Inverse Matrix not implemented for %dx%d Matrix",rows,rows);
+			// Solve Ux = y
+			for(int i=n-1; i >= 0;i--)
+			{
+				inv.at(i,j) = y[i];
+
+				for(int j2=i+1; j2 < n; j2++){
+					inv.at(i,j) -= LU.at(i,j2)*inv.at(j2,j);
+				}
+
+				inv.at(i,j) /= LU.at(i,i);
+			}
+		}
 
 		return inv;
 	}
@@ -373,7 +406,6 @@ public:
 		return nv;
 	}
 
-	// TODO
 	Matrix<T, COMPILE_COLS, COMPILE_ROWS> operator*(Matrix<T, COMPILE_COLS, COMPILE_ROWS> m2) {
 		Matrix<T, COMPILE_ROWS, COMPILE_ROWS> nv(rows, m2.getCols());
 		for (int y = 0; y < rows; y++)
@@ -384,8 +416,6 @@ public:
 			}
 		return nv;
 	}
-
-
 
 private:
 	/**
@@ -402,6 +432,7 @@ private:
 	T* m;
 };
 
+// Define some matrix types with fixed size and type
 typedef Matrix<unsigned char,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixb;
 typedef Matrix<float,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixf;
 typedef Matrix<int,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixi;
