@@ -434,18 +434,22 @@ private:
 
 // Define some matrix types with fixed size and type
 typedef Matrix<unsigned char,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixb;
+typedef Matrix<double,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixd;
 typedef Matrix<float,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixf;
 typedef Matrix<int,FCV_DYNAMIC_SIZE,FCV_DYNAMIC_SIZE> Matrixi;
 
 typedef Matrix<unsigned char,2,2> Matrix2x2b;
+typedef Matrix<double,2,2> Matrix2x2d;
 typedef Matrix<float,2,2> Matrix2x2f;
 typedef Matrix<int,2,2> Matrix2x2i;
 
 typedef Matrix<unsigned char,3,3> Matrix3x3b;
+typedef Matrix<double,3,3> Matrix3x3d;
 typedef Matrix<float,3,3> Matrix3x3f;
 typedef Matrix<int,3,3> Matrix3x3i;
 
 typedef Matrix<unsigned char,4,4> Matrix4x4b;
+typedef Matrix<double,4,4> Matrix4x4d;
 typedef Matrix<float,4,4> Matrix4x4f;
 typedef Matrix<int,4,4> Matrix4x4i;
 

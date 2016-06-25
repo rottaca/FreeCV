@@ -319,18 +319,22 @@ private:
 
 // Define some vector types with fixed size and type
 typedef Vector<unsigned char,FCV_DYNAMIC_SIZE> Vectorb;
+typedef Vector<float,FCV_DYNAMIC_SIZE> Vectord;
 typedef Vector<float,FCV_DYNAMIC_SIZE> Vectorf;
 typedef Vector<int,FCV_DYNAMIC_SIZE> Vectori;
 
 typedef Vector<unsigned char,2> Vector2b;
+typedef Vector<float,2> Vector2d;
 typedef Vector<float,2> Vector2f;
 typedef Vector<int,2> Vector2i;
 
 typedef Vector<unsigned char,3> Vector3b;
+typedef Vector<float,3> Vector3d;
 typedef Vector<float,3> Vector3f;
 typedef Vector<int,3> Vector3i;
 
 typedef Vector<unsigned char,4> Vector4b;
+typedef Vector<float,4> Vector4d;
 typedef Vector<float,4> Vector4f;
 typedef Vector<int,4> Vector4i;
 

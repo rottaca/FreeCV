@@ -31,6 +31,7 @@
 bool TestMatrix();
 bool TestMath();
 bool TestSGM();
+bool TestNeuro();
 
 
 #ifdef WITH_CUDA
@@ -48,6 +49,7 @@ int main(int argc, char **argv) {
 	TestMatrix();
 	TestMath();
 //	TestSGM();
+	TestNeuro();
 
 #ifdef WITH_CUDA
 	TestCuda();
@@ -383,6 +385,44 @@ bool TestSGM(){
 
 	fcv::ImageFileManager::saveImage(&imgDispColor, "disparityR.ppm",
 			fcv::ImageFileManager::PPM_BINARY);
+
+	LOG_TEST_FKT_END(true);
+	return true;
+}
+bool TestNeuro(){
+	LOG_TEST_FKT_START("Neuronal Network");
+
+	fcv::Matrixd T(4,1);
+	fcv::Matrixd X(4,2);
+	// XOR
+	//  X   | T
+	// ----------
+	// 0 0  | 0
+	// 0 1  | 1
+	// 1 0  | 1
+	// 1 1  | 0
+
+	T.at(0,0) = 0;
+	T.at(1,0) = 1;
+	T.at(2,0) = 1;
+	T.at(3,0) = 0;
+
+	X.at(0,0) = 0;
+	X.at(0,1) = 0;
+	X.at(1,0) = 0;
+	X.at(1,1) = 1;
+	X.at(2,0) = 1;
+	X.at(2,1) = 0;
+	X.at(3,0) = 1;
+	X.at(3,1) = 1;
+
+	fcv::MLPRProp mlp;
+	fcv::MLPTransferTanh trans;
+	mlp.initMLP(0.5,0.05,1.2,0.8,0.5,10e-6,10e-5,5000,2,5,1,(fcv::IMLPTransfer*)&trans);
+
+
+	LOG_TEST_SUB_FKT_END("Neuronal Network (RPROP)", true);
+
 
 	LOG_TEST_FKT_END(true);
 	return true;

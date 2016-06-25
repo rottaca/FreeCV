@@ -27,6 +27,10 @@
 #include "FreeCV/Stereo/PointCloudCreator.h"
 #include "FreeCV/Stereo/UndistortAndRectify.h"
 
+#include "FreeCV/Neuro/IMLPTransfer.h"
+#include "FreeCV/Neuro/MLPTransferTanh.h"
+#include "FreeCV/Neuro/MLPRProp.h"
+
 // Linux headers
 #ifdef __linux__
 	#include "FreeCV/Linux/VideoCapture.h"

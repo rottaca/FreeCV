@@ -70,6 +70,7 @@ SET(SOURCE_FILES
     src/UndistortAndRectify.cpp
     src/CalibLoader.cpp
     src/Math.cpp
+    src/MLPRProp.cpp
 )
 
 ######################################################################
@@ -97,6 +98,10 @@ SET(HEADER_FILES
     include/FreeCV/Stereo/PointCloudCreator.h
     include/FreeCV/Stereo/UndistortAndRectify.h
     include/FreeCV/Stereo/CalibLoader.h
+    
+    include/FreeCV/Neuro/IMLPTransfer.h
+    include/FreeCV/Neuro/MLPTransferTanh.h
+    include/FreeCV/Neuro/MLPRProp.h
     
 )
 

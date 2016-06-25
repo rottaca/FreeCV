@@ -15,6 +15,9 @@
 
 namespace fcv {
 
+#define FCV_FRAND(min, max) (min + (double)rand() / RAND_MAX * ((max) - (min)))
+
+
 /**
  * Decomposes the Matrix into a lower and upper triangle matrix (Doolittle factorization) where L*R=P*A.
  */
