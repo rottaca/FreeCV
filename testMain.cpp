@@ -33,7 +33,6 @@ bool TestMath();
 bool TestSGM();
 bool TestNeuro();
 
-
 #ifdef WITH_CUDA
 #include "FreeCV/Cuda/Cuda.h"
 bool TestCuda();
@@ -419,7 +418,11 @@ bool TestNeuro(){
 	fcv::MLPRProp mlp;
 	fcv::MLPTransferTanh trans;
 	mlp.initMLP(0.5,0.05,1.2,0.8,0.5,10e-6,10e-5,5000,2,5,1,(fcv::IMLPTransfer*)&trans);
-
+	mlp.trainMLP(X,T);
+	fcv::Vectord In(2),y2;
+	In[0] = 1;
+	In[0] = 0;
+	mlp.evalMLP(In,&y2);
 
 	LOG_TEST_SUB_FKT_END("Neuronal Network (RPROP)", true);
 
@@ -427,6 +430,7 @@ bool TestNeuro(){
 	LOG_TEST_FKT_END(true);
 	return true;
 }
+
 #ifdef WITH_CUDA
 bool TestCuda()
 {

@@ -37,19 +37,33 @@ public:
 			double rateStart, double ratep, double ratem, double rateMax, double rateMin,
 			double eps, double maxIt,int n,int h,int p, IMLPTransfer* trans);
 
-	double trainMLP(Matrixd X, Matrixd T);
+	double trainMLP(const Matrixd& X, const Matrixd& T);
 
 	/**
 	 * Calculates the overall error between the neuronal network and the training signal
 	 */
-	double calcErrorMLP(Matrixd X, Matrixd T);
+	double calcErrorMLP(const Matrixd& X, const Matrixd& T);
+	/**
+	 * Evaluates the neuronal network with with a given input vector
+	 * It outputs the output for each neuron in the hidden and output layer
+	 * @param X Input Vector
+	 * @param y1 Output of the hidden layer
+	 * @param y2 Output of the output layer
+	 * @param u1
+	 */
+ 	void evalMLP(const Vectord& X,  Vectord *y2, Vectord* y1=NULL,  Vectord* u1=NULL, Vectord* u2=NULL);
+
+private:
 	/**
 	 * Evaluates the neuronal network with all InputData (Matrix), and the dataIdx to select a single data sample.
 	 * It outputs the output for each neuron in the hidden and output layer
+	 * @param X Input Matrix with a single row for each input sample
+	 * @param dataIdx Index into the DataMatrix X to select an input for evaluation
+	 * @param y1 Output of the hidden layer
+	 * @param y2 Output of the output layer
+	 * @param u1
 	 */
- 	void evalMLP(Matrixd X, int dataIdx, Vectord& y1, Vectord &y2, Vectord& u1, Vectord &u2);
-
-
+ 	void evalMLP(const Matrixd X, int dataIdx, Vectord& y1, Vectord &y2, Vectord& u1, Vectord &u2);
 private:
 
 	double m_a;

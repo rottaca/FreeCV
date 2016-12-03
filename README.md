@@ -1,11 +1,11 @@
 
 # FreeCV
-This is an implementation of my own computervision library. 
+This is an implementation of my own computervision library.
 The library will be extended according to my projects.
 
-Features:
- - Logger class that allows logging of text messages. 
-    - It includes formatting. 
+## Features:
+ - Logger class that allows logging of text messages.
+    - It includes formatting.
     - Distinguishes between debug and release
       - Debug-Messages will be removed in release mode.
       - Log massages contain file name and line number in debug mode.
@@ -28,9 +28,9 @@ Features:
   - LU-Decomposition with column pivoing implemented.
   - Cholesky-Decomposition implemented.
   - Matrix invert with LU decomposition implemented.
+
   
-  
-TODO's:
+## TODO's:
   - Implement Matrix Determinant
   - Implement ExposureControl for ManualCtrl (User supplies goal luminance and algorithm adjusts exposure).
   - Implement ImageTransform (Rotate, Scale, Translate)
